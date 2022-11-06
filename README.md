@@ -14,7 +14,7 @@ This repo hosts an early version of a tool that classifies reads as ancient or n
 The `data/` folder contains the following input files:
 
 ```
-ancient_kmers : a text file where each row is a known anciant kmers
+ancient_kmers : a text file where each row is a known ancient kmer
 unknown_reads.fastq : a file with reads which we want to classify as ancient or not
 ```    
 
