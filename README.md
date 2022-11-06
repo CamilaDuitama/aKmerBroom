@@ -20,7 +20,7 @@ unknown_reads.fastq : a file with reads which we want to classify as ancient or 
 
 ### Output 
 
-The `output/` folder contains the output file with reads classified as ancient.
+The `output/` folder contains the output file with reads classified as ancient. 
 
 
 
@@ -29,7 +29,6 @@ The `output/` folder contains the output file with reads classified as ancient.
 pip install biopython
 pip install cython
 pip install pybloomfiltermmap3
-
 ```
 
     
