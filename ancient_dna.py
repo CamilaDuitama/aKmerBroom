@@ -52,7 +52,7 @@ def main():
             print("Error : ancient_bloom_capacity provided is not an integer")
             kmers.exit_gracefully()
     else:
-        bf_capacity = 1000 * 1000
+        bf_capacity = 1000 * 1000 * 10 
 
     # ancient kmers set
     if args['ancient_kmers_set']:

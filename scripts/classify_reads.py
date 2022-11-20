@@ -42,8 +42,9 @@ def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size, ancient_proportion
     for record in SeqIO.parse(unknown_reads_file, "fastq"):
         score = record.letter_annotations["phred_quality"]
         read_count += 1
-        #print("No. of reads seen so far: ", read_count)
-        print("Current read ID is : ", record.id)
+        if read_count % 100000 == 0:
+            print("No. of reads seen so far: ", read_count)
+            #print("Current read ID is : ", record.id)
 
         to_kmerize_fwd = str(record.seq).upper()
         length = len(to_kmerize_fwd)
@@ -66,10 +67,11 @@ def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size, ancient_proportion
             proportion = round((count_of_ancient_kmers_in_this_read / count_of_all_kmers_in_this_read), 2)
         except ZeroDivisionError:
             proportion = 0
-        print("Ancient proportion is: ", proportion)
+        #print("Ancient proportion is: ", proportion)
 
-        if proportion >= ancient_proportion_cutoff:
-            SeqIO.write(SeqRecord(record.seq, id=record.id, description=str(length) + " " + str(proportion)),
+        # Don't apply cutoff at this stage
+        #if proportion >= ancient_proportion_cutoff:
+        SeqIO.write(SeqRecord(record.seq, id=record.id, description=str(length) + " " + str(proportion)),
                     annotated_reads_file, "fasta")
     annotated_reads_file.close()
     return
