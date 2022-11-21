@@ -37,7 +37,6 @@ def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size, ancient_proportion
     unknown_reads_file = "data/unknown_reads.fastq"
     annotated_reads_file = open("output/annotated_reads.fasta", "w")
     read_count = 0
-    n_kmers = "N" * kmer_size
 
     for record in SeqIO.parse(unknown_reads_file, "fastq"):
         score = record.letter_annotations["phred_quality"]
@@ -54,8 +53,6 @@ def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size, ancient_proportion
         curr_kmer_abundances = []
         for i in range(0, length - kmer_size + 1):
             kmer = to_kmerize_fwd[i:i + kmer_size]
-            if kmer == n_kmers:
-                continue
             count_of_all_kmers_in_this_read += 1
             if kmer in ancient_kmers_bf or reverse[length - kmer_size - i:length - i] in ancient_kmers_bf:
                 count_of_ancient_kmers_in_this_read += 1
