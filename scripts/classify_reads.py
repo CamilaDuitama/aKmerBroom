@@ -35,7 +35,7 @@ def getbloomFilter(bf, bf_capacity, ancient_kmers, kmer_size):
 def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size, ancient_proportion_cutoff):
     ancient_kmers_bf = getbloomFilter(bf, bf_capacity, ancient_kmers, kmer_size)
     unknown_reads_file = "data/unknown_reads.fastq"
-    annotated_reads_file = open("output/annotated_reads.fasta", "w")
+    annotated_reads_file = open("output/annotated_reads.fastq", "w")
     read_count = 0
 
     for record in SeqIO.parse(unknown_reads_file, "fastq"):
