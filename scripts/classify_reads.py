@@ -40,6 +40,7 @@ def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size, ancient_proportion
 
     for record in SeqIO.parse(unknown_reads_file, "fastq"):
         score = record.letter_annotations["phred_quality"]
+        matches = []
         read_count += 1
         if read_count % 100000 == 0:
             print("No. of reads seen so far: ", read_count)
@@ -56,20 +57,24 @@ def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size, ancient_proportion
             count_of_all_kmers_in_this_read += 1
             if kmer in ancient_kmers_bf or reverse[length - kmer_size - i:length - i] in ancient_kmers_bf:
                 count_of_ancient_kmers_in_this_read += 1
-
-        #print("Total No. of k-mers from this read: ", count_of_all_kmers_in_this_read)
-        #print("No. of ancient k-mers: ", count_of_ancient_kmers_in_this_read)
+                matches.append(0)    # match to ancient kmer found, represented by '!'
+            else:
+                matches.append(12)   # match to ancient kmer not found, represented by '-'
+        for i in range(kmer_size-1):
+            matches.append(12)       # need to add an extra k-1 empty matches since kmers are now all out
 
         try:
             proportion = round((count_of_ancient_kmers_in_this_read / count_of_all_kmers_in_this_read), 2)
         except ZeroDivisionError:
             proportion = 0
-        #print("Ancient proportion is: ", proportion)
 
-        # Don't apply cutoff at this stage
-        #if proportion >= ancient_proportion_cutoff:
-        SeqIO.write(SeqRecord(record.seq, id=record.id, description=str(length) + " " + str(proportion)),
-                    annotated_reads_file, "fasta")
+        new_record = SeqIO.SeqRecord(seq=record.seq,
+                                     id=record.id,
+                                     description=record.id + " " + str(length) + " " + str(proportion),
+                                     letter_annotations={'phred_quality': matches},
+                                     )
+        SeqIO.write(new_record, annotated_reads_file, "fastq")
+
     annotated_reads_file.close()
     return
 
