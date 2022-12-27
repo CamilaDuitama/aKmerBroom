@@ -41,6 +41,7 @@ def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size, ancient_proportion
     for record in SeqIO.parse(unknown_reads_file, "fastq"):
         score = record.letter_annotations["phred_quality"]
         matches = []
+        consecutive_matches_found = 0
         read_count += 1
         if read_count % 100000 == 0:
             print("No. of reads seen so far: ", read_count)
@@ -63,14 +64,20 @@ def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size, ancient_proportion
         for i in range(kmer_size-1):
             matches.append(12)       # need to add an extra k-1 empty matches since kmers are now all out
 
+        # compute proportion
         try:
             proportion = round((count_of_ancient_kmers_in_this_read / count_of_all_kmers_in_this_read), 2)
         except ZeroDivisionError:
             proportion = 0
 
+        # get is_consecutive (i.e. at least 2 matches in a row)
+        stringified_matches = ''.join(str(match) for match in matches)
+        if '00' in stringified_matches:
+            consecutive_matches_found = 1
+
         new_record = SeqIO.SeqRecord(seq=record.seq,
                                      id=record.id,
-                                     description=record.id + " " + str(length) + " " + str(proportion),
+                                     description=record.id + " " + str(length) + " " + str(proportion) + " " + str(consecutive_matches_found),
                                      letter_annotations={'phred_quality': matches},
                                      )
         SeqIO.write(new_record, annotated_reads_file, "fastq")
