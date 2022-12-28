@@ -63,7 +63,8 @@ def main():
     # declare defaults
     print("Using default of k=31 and input folder='data'")
     print("Shortlisting ancient reads")
-    classify_reads.classify_reads(bloom_filt, bf_capacity, ancient_kmers, k_size, ancient_proportion_cutoff)
+    seen_kmer_set = classify_reads.classify_reads(bloom_filt, bf_capacity, ancient_kmers, k_size, ancient_proportion_cutoff)
+    classify_reads.classify_reads_using_seen_kmers(seen_kmer_set, k_size)
     print("Completed successfully")
 
 

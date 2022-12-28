@@ -37,11 +37,13 @@ def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size, ancient_proportion
     unknown_reads_file = "data/unknown_reads.fastq"
     annotated_reads_file = open("output/annotated_reads.fastq", "w")
     read_count = 0
+    seen_kmer_set = set()
 
     for record in SeqIO.parse(unknown_reads_file, "fastq"):
         score = record.letter_annotations["phred_quality"]
         matches = []
         consecutive_matches_found = 0
+        curr_kmer_set = set()
         read_count += 1
         if read_count % 100000 == 0:
             print("No. of reads seen so far: ", read_count)
@@ -55,6 +57,7 @@ def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size, ancient_proportion
         curr_kmer_abundances = []
         for i in range(0, length - kmer_size + 1):
             kmer = to_kmerize_fwd[i:i + kmer_size]
+            curr_kmer_set.add(kmer)
             count_of_all_kmers_in_this_read += 1
             if kmer in ancient_kmers_bf or reverse[length - kmer_size - i:length - i] in ancient_kmers_bf:
                 count_of_ancient_kmers_in_this_read += 1
@@ -75,6 +78,10 @@ def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size, ancient_proportion
         if '00' in stringified_matches:
             consecutive_matches_found = 1
 
+        if consecutive_matches_found:
+            for kmer in curr_kmer_set:
+                seen_kmer_set.add(kmer)
+
         new_record = SeqIO.SeqRecord(seq=record.seq,
                                      id=record.id,
                                      description=record.id + " " + str(length) + " " + str(proportion) + " " + str(consecutive_matches_found),
@@ -83,5 +90,43 @@ def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size, ancient_proportion
         SeqIO.write(new_record, annotated_reads_file, "fastq")
 
     annotated_reads_file.close()
-    return
+    return seen_kmer_set
 
+
+def classify_reads_using_seen_kmers(seen_kmer_set, kmer_size):
+    ip_reads_file = "output/annotated_reads.fastq"
+    op_reads_file = open("output/annotated_reads_with_seen_kmers.fastq", "w")
+    read_count = 0
+    for record in SeqIO.parse(ip_reads_file, "fastq"):
+        score = record.letter_annotations["phred_quality"]
+        read_count += 1
+        if read_count % 100000 == 0:
+            print("No. of reads seen so far: ", read_count)
+
+        to_kmerize_fwd = str(record.seq).upper()
+        length = len(to_kmerize_fwd)
+        reverse = kmers.reverse_complement(to_kmerize_fwd)
+        count_of_all_kmers_in_this_read = 0
+        count_of_seen_kmers_in_this_read = 0
+        for i in range(0, length - kmer_size + 1):
+            kmer = to_kmerize_fwd[i:i + kmer_size]
+            count_of_all_kmers_in_this_read += 1
+            if kmer in seen_kmer_set or reverse[length - kmer_size - i:length - i] in seen_kmer_set:
+                count_of_seen_kmers_in_this_read += 1
+
+        # compute seen_proportion
+        try:
+            print(count_of_seen_kmers_in_this_read)
+            seen_proportion = round((count_of_seen_kmers_in_this_read / count_of_all_kmers_in_this_read), 2)
+        except ZeroDivisionError:
+            seen_proportion = 0
+
+        new_record = SeqIO.SeqRecord(seq=record.seq,
+                                     id=record.id,
+                                     description=record.description + " " + str(seen_proportion),
+                                     letter_annotations={'phred_quality': score},
+                                     )
+        SeqIO.write(new_record, op_reads_file, "fastq")
+
+    op_reads_file.close()
+    return
