@@ -13,7 +13,7 @@ This tool identifies ancient reads, given a text file of known ancient kmers. It
     # Use the ancient kmers text file and run the method
     python ancient_dna.py --ancient_kmers_set
 
-    # Use the ancient kmers bloom filter and run the method
+    # Or alternatively, use the ancient kmers bloom filter and run the method
     python ancient_dna.py --ancient_bloom
 
 
