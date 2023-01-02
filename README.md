@@ -10,10 +10,10 @@ This tool identifies ancient reads, given a text file of known ancient kmers. It
 
 ### Usage
 
-    # If Bloom Filter does not exist, first build it
+    # Use the ancient kmers text file and run the method
     python ancient_dna.py --ancient_kmers_set
 
-    # Else if Bloom Filter exists, we can use it
+    # Use the ancient kmers bloom filter and run the method
     python ancient_dna.py --ancient_bloom
 
 
@@ -36,7 +36,7 @@ annotated_reads_with_seen_kmers.fastq    # final output
 ```
 The final output file has the following 5 fields in each record header: 
 ```
-SeqId, ReadLen, AncientProportion, isConsecutiveMatchFound, SeenProportion
+SeqId, ReadLen, InitialAncientKmerProportion, isConsecutiveMatchFound, SeenProportion
 ```   
 Reads with `SeenProportion` > 0.5 (ie. 50%) can be considered as ancient reads. 
 
