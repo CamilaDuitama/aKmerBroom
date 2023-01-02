@@ -1,4 +1,4 @@
-# OKBloomer
+# OKBloomer: Identify ancient reads using known ancient kmers
 
 This tool identifies ancient reads, given a file of known ancient kmers. It does so in the following steps: 
 1. Build an `ancient_kmers.bloom` filter from an ancient_kmers text file (if such a Bloom Filter does not yet exist).
