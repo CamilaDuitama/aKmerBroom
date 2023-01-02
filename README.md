@@ -5,7 +5,7 @@ This tool identifies ancient reads, given a file of known ancient kmers. It does
 2. For a set of input reads:
     1. Save those reads which have 2 consecutive kmer matches against `ancient_kmers.bloom`
     2. Kmerize the saved reads to generate a new set of ancient kmers, called "seen kmers"
-3. For the same set of input reads, for each read, identify matches against "seen kmers" and classify each read with >50% matches as an ancient read.
+3. For the same set of input reads, identify matches against "seen kmers" and classify each read with >50% matches as an ancient read.
 
 
 ### Usage
