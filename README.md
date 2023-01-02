@@ -1,6 +1,6 @@
 # ancient_dna
 
-This tool identifies ancient reads, given a text file of known ancient kmers. It does so in the following steps: 
+This tool identifies ancient reads, given a file of known ancient kmers. It does so in the following steps: 
 1. Build an `ancient_kmers.bloom` filter from an ancient_kmers text file (if such a Bloom Filter does not yet exist).
 2. For a set of input reads:
     1. Save those reads which have 2 consecutive kmer matches against `ancient_kmers.bloom`
