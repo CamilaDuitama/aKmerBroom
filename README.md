@@ -11,10 +11,10 @@ This tool identifies ancient reads, given a file of known ancient kmers. It does
 ### Usage
 
     # Use the ancient kmers text file and run the method
-    python ancient_dna.py --ancient_kmers_set
+    python okbloomer.py --ancient_kmers_set
 
     # Or alternatively, use the ancient kmers bloom filter and run the method
-    python ancient_dna.py --ancient_bloom
+    python okbloomer.py --ancient_bloom
 
 
 ### Input
