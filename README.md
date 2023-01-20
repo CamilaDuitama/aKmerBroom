@@ -1,4 +1,4 @@
-# okbloomer: Identify ancient reads using bloomfilters constructed from ancient oral k-mers 
+# aKmerBroom: Identify ancient reads using bloomfilters constructed from ancient oral k-mers 
 
 This tool identifies ancient reads, given a file of known ancient kmers. It does so in the following steps: 
 1. Build an `ancient_kmers.bloom` filter from an ancient_kmers text file (if such a Bloom Filter does not yet exist).
@@ -11,10 +11,10 @@ This tool identifies ancient reads, given a file of known ancient kmers. It does
 ### Usage
 
     # Use the ancient kmers text file and run the method
-    python okbloomer.py --ancient_kmers_set
+    python akmerbroom.py --ancient_kmers_set
 
     # Or alternatively, use the ancient kmers bloom filter and run the method
-    python okbloomer.py --ancient_bloom
+    python akmerbroom.py --ancient_bloom
 
 
 ### Input
