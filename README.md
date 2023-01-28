@@ -9,12 +9,13 @@ This tool identifies ancient reads, given a file of known ancient kmers. It does
 
 
 ### Usage
-
-    # Use the ancient kmers text file and run the method
+    # Use the ancient kmers bloom filter provided
+    python akmerbroom.py --ancient_bloom
+    
+    # Use an ancient kmers text file 
     python akmerbroom.py --ancient_kmers_set
 
-    # Or alternatively, use the ancient kmers bloom filter and run the method
-    python akmerbroom.py --ancient_bloom
+    
 
 
 ### Input
