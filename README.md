@@ -51,4 +51,28 @@ pip install cython
 pip install pybloomfiltermmap3
 ```
 
-    
+
+### Testing
+The `tests/` folder contains a test dataset which has aOral data contaminated with non aOral data. To run a test, use the following steps:
+
+First, link the test dataset in the input `data/` folder: 
+```
+cd data/
+ln -sf ../tests/unknown_reads.fastq .
+```
+
+Next, download the Bloom Filter into the `data/` folder from the following
+[Google Drive link](https://drive.google.com/file/d/1wWcVVY0u_Az3ZRgCLBZWhBe0YmnkHTSv/view?usp=share_link). 
+Note that it could take a few minutes (file size = 3Gb). 
+This can be done from the command line using the `gdown` utility.
+```
+cd data/             # if you are not already in the data/ directory 
+pip install gdown
+gdown --id 1wWcVVY0u_Az3ZRgCLBZWhBe0YmnkHTSv
+```
+
+Finally, run aKmerBroom
+```
+cd ../              # if you are not already in the main directory
+python akmerbroom.py --ancient_bloom
+```
