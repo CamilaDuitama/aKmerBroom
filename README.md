@@ -11,7 +11,9 @@ This tool identifies ancient reads, given a file of known ancient kmers. It does
 ### Usage
     # Use the ancient kmers bloom filter provided
     python akmerbroom.py --ancient_bloom
-    
+
+    or    
+
     # Use an ancient kmers text file 
     python akmerbroom.py --ancient_kmers_set
 
@@ -39,7 +41,7 @@ The final output file has the following 4 fields in each record header:
 ```
 SeqId, ReadLen, isConsecutiveMatchFound, AnchorProportion
 ```   
-By default, reads with `AnchorProportion` > 0.5 (ie. 50%) are chosen as ancient reads. 
+By default, reads with `AnchorProportion` >= 0.5 (ie. 50%) are chosen as ancient reads. 
 
 
 ### Dependencies
