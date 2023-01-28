@@ -108,7 +108,7 @@ def classify_reads_using_anchor_kmers(anchor_kmer_set, kmer_size, anchor_proport
 
         # compute anchor_proportion
         try:
-            print(count_of_anchor_kmers_in_this_read)
+            #print(count_of_anchor_kmers_in_this_read)
             anchor_proportion = round((count_of_anchor_kmers_in_this_read / count_of_all_kmers_in_this_read), 2)
         except ZeroDivisionError:
             anchor_proportion = 0
