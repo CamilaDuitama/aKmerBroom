@@ -19,7 +19,7 @@ This tool identifies ancient reads, given a file of known ancient kmers. It does
 
 ### Input
 
-The `data/` folder contains the following input files:
+The `data/` folder should contain the following input files:
 
 ```
 ancient_kmers       : a text file where each row is a known ancient kmer
@@ -29,16 +29,16 @@ unknown_reads.fastq : a file with reads which we want to classify as ancient or 
 
 ### Output 
 
-The `output/` folder contains the following outputs files:
+The `output/` folder should contain the following output files:
 ```
 annotated_reads.fastq                    # intermediate output
-annotated_reads_with_seen_kmers.fastq    # final output
+annotated_reads_with_anchor_kmers.fastq    # final output
 ```
 The final output file has the following 5 fields in each record header: 
 ```
-SeqId, ReadLen, InitialAncientKmerProportion, isConsecutiveMatchFound, SeenProportion
+SeqId, ReadLen, isConsecutiveMatchFound, AnchorProportion
 ```   
-Reads with `SeenProportion` > 0.5 (ie. 50%) can be considered as ancient reads. 
+By default, reads with `AnchorProportion` > 0.5 (ie. 50%) are chosen as ancient reads. 
 
 
 ### Dependencies

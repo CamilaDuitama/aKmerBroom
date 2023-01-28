@@ -13,11 +13,12 @@ def main():
                         action='store_true', required=False)
     parser.add_argument("--ancient_bloom_capacity", type=int, help="If ancient BloomFilter is not provided, \
         This sets the capacity of the bloom filter. This should be greater than the number of distinct kmers \
-        in ancient_kmers.")
+        in ancient kmers input file")
     parser.add_argument('--ancient_kmers_set', help='Use if ancient kmers set provided (defaults to False)',
                         action='store_true', required=False)
     parser.add_argument('--kmer_size', help='Set kmer size (defaults to 31)', required=False)
-    parser.add_argument('--ancient_proportion_cutoff', help='Set ancient kmer proportion (defaults to 0.05)',
+    parser.add_argument('--anchor_proportion_cutoff', help="Set anchor kmer proportion, \
+        above which a read is classified as ancient (defaults to 0.5)",
                         required=False)
     args = vars(parser.parse_args())
 
