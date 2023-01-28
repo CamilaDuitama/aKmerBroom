@@ -53,7 +53,8 @@ pip install pybloomfiltermmap3
 
 
 ### Testing
-The `tests/` folder contains a test dataset which has aOral data contaminated with non aOral data. To run a test, use the following steps:
+The `tests/` folder contains a test dataset consisting of aOral data `@SRR13355797` mixed with non aOral data `@ERR671934`. 
+To run a test, use the following steps:
 
 First, link the test dataset in the input `data/` folder: 
 ```
@@ -62,17 +63,23 @@ ln -sf ../tests/unknown_reads.fastq .
 ```
 
 Next, download the Bloom Filter into the `data/` folder from the following
-[Google Drive link](https://drive.google.com/file/d/1wWcVVY0u_Az3ZRgCLBZWhBe0YmnkHTSv/view?usp=share_link). 
+[Google Drive link](https://drive.google.com/file/d/16-7N6l_FwxCG5UDdR8cP7tvVhjG55mtf/view?usp=share_link). 
 Note that it could take a few minutes (file size = 3Gb). 
 This can be done from the command line using the `gdown` utility.
 ```
 cd data/             # if you are not already in the data/ directory 
 pip install gdown
-gdown --id 1wWcVVY0u_Az3ZRgCLBZWhBe0YmnkHTSv
+gdown --id 16-7N6l_FwxCG5UDdR8cP7tvVhjG55mtf
 ```
+
 
 Finally, run aKmerBroom
 ```
 cd ../              # if you are not already in the main directory
 python akmerbroom.py --ancient_bloom
 ```
+
+The ancient reads file will be written to `output/annotated_reads_with_anchor_kmers.fastq`. 
+The majority of output reads should be from the aOral sample `@SRR13355797`, with a few false positives from non aOral `@ERR671934`.
+
+
