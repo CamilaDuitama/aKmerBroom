@@ -36,12 +36,6 @@ def main():
             print("Error : kmer_size provided is not an integer")
             kmers.exit_gracefully()
 
-    # set proportion cutoff
-    if not args['ancient_proportion_cutoff']:
-        ancient_proportion_cutoff = 0.05
-    else:
-        ancient_proportion_cutoff = float(args['ancient_proportion_cutoff'])
-
     # set bloom filter
     if args['ancient_bloom']:
         bloom_filt = True
@@ -59,13 +53,18 @@ def main():
     if args['ancient_kmers_set']:
         ancient_kmers = True
 
+    # set anchor proportion cutoff
+    if not args['anchor_proportion_cutoff']:
+        anchor_proportion_cutoff = 0.5
+    else:
+        anchor_proportion_cutoff = float(args['anchor_proportion_cutoff'])
 
     print("Started...")
     # declare defaults
     print("Using default of k=31 and input folder='data'")
     print("Shortlisting ancient reads")
-    seen_kmer_set = classify_reads.classify_reads(bloom_filt, bf_capacity, ancient_kmers, k_size, ancient_proportion_cutoff)
-    classify_reads.classify_reads_using_seen_kmers(seen_kmer_set, k_size)
+    anchor_kmer_set = classify_reads.classify_reads(bloom_filt, bf_capacity, ancient_kmers, k_size)
+    classify_reads.classify_reads_using_anchor_kmers(anchor_kmer_set, k_size, anchor_proportion_cutoff)
     print("Completed successfully")
 
 
