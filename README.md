@@ -62,14 +62,13 @@ cd data/
 ln -sf ../tests/unknown_reads.fastq .
 ```
 
-Next, download the Bloom Filter into the `data/` folder from the following
-[Google Drive link](https://drive.google.com/file/d/16-7N6l_FwxCG5UDdR8cP7tvVhjG55mtf/view?usp=share_link). 
+Next, download the Bloom Filter into the `data/` folder from the following link
+[ancient_bloom](https://zenodo.org/record/7587160/files/ancient_kmers.bloom?download=1). 
 Note that it could take a few minutes (file size = 3Gb). 
 This can be done from the command line using the `gdown` utility.
 ```
 cd data/             # if you are not already in the data/ directory 
-pip install gdown
-gdown --id 16-7N6l_FwxCG5UDdR8cP7tvVhjG55mtf
+wget https://zenodo.org/record/7587160/files/ancient_kmers.bloom?download=1
 ```
 
 
