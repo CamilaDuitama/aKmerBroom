@@ -3,15 +3,17 @@ from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from scripts import kmers
 from pybloomfilter import BloomFilter
+import logging
 
+logger = logging.getLogger(__name__)
 
 def getbloomFilter(bf, bf_capacity, ancient_kmers, kmer_size):
     if bf:
-        print("Opening Bloom Filter of ancient kmers")
+        logger.info("Opening Bloom Filter of ancient kmers")
         ancient_kmers_bf = BloomFilter.open("data/ancient_kmers.bloom")
-        print("Done")
+        logger.info("Done")
     else:
-        print("Need to make Bloom Filter of ancient k-mers")
+        logger.info("Need to make Bloom Filter of ancient k-mers")
         bf_filename = "data/ancient_kmers.bloom"
         ancient_kmers_bf = BloomFilter(bf_capacity, .001, bf_filename)
 
@@ -26,16 +28,16 @@ def getbloomFilter(bf, bf_capacity, ancient_kmers, kmer_size):
                     ancient_kmers_bf.add(line.rstrip())
 
         else:
-            print("Please provide an ancient kmer set")
+            logger.error("Please provide an ancient kmer set")
             kmers.exit_gracefully()
-        print("Done creating bloom filter")
+        logger.info("Done creating bloom filter")
     return ancient_kmers_bf
 
 
-def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size):
+def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size,output):
     ancient_kmers_bf = getbloomFilter(bf, bf_capacity, ancient_kmers, kmer_size)
     unknown_reads_file = "data/unknown_reads.fastq"
-    annotated_reads_file = open("output/annotated_reads.fastq", "w")
+    annotated_reads_file = open(output+"/annotated_reads.fastq", "w")
     read_count = 0
     anchor_kmer_set = set()
 
@@ -46,7 +48,7 @@ def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size):
         curr_kmer_set = set()
         read_count += 1
         if read_count % 100000 == 0:
-            print("No. of reads seen so far: ", read_count)
+            logger.info("No. of reads seen so far: "+str(read_count))
 
         to_kmerize_fwd = str(record.seq).upper()
         length = len(to_kmerize_fwd)
@@ -85,15 +87,15 @@ def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size):
     return anchor_kmer_set
 
 
-def classify_reads_using_anchor_kmers(anchor_kmer_set, kmer_size, anchor_proportion_cutoff):
-    ip_reads_file = "output/annotated_reads.fastq"
-    op_reads_file = open("output/annotated_reads_with_anchor_kmers.fastq", "w")
+def classify_reads_using_anchor_kmers(anchor_kmer_set, kmer_size, anchor_proportion_cutoff,output):
+    ip_reads_file = output+"/annotated_reads.fastq"
+    op_reads_file = open(output+"/annotated_reads_with_anchor_kmers.fastq", "w")
     read_count = 0
     for record in SeqIO.parse(ip_reads_file, "fastq"):
         score = record.letter_annotations["phred_quality"]
         read_count += 1
         if read_count % 100000 == 0:
-            print("No. of reads seen so far: ", read_count)
+            logger.info("No. of reads seen so far: " + str(read_count))
 
         to_kmerize_fwd = str(record.seq).upper()
         length = len(to_kmerize_fwd)
