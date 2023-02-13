@@ -68,7 +68,7 @@ Note that it could take a few minutes (file size = 3Gb).
 This can be done from the command line using the `gdown` utility.
 ```
 cd data/             # if you are not already in the data/ directory 
-wget https://zenodo.org/record/7587160/files/ancient_kmers.bloom?download=1 -O ancient_kmers.bloom
+wget https://zenodo.org/record/7587160/files/ancient_kmers.bloom -O ancient_kmers.bloom
 ```
 
 
