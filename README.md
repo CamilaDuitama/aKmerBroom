@@ -1,4 +1,4 @@
-# aKmerBroom: Ancient oral DNA decontamination using Bloom filters on k-mer sets
+# 🧹🦷aKmerBroom: Ancient oral DNA decontamination using Bloom filters on k-mer sets
 
 This tool identifies ancient reads, given a file of known ancient kmers. It does so in the following steps: 
 1. Build an `ancient_kmers.bloom` filter from an ancient kmers text file (if such a Bloom filter does not yet exist).
