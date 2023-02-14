@@ -1,8 +1,10 @@
 import sys
+import logging
 
+logger = logging.getLogger(__name__)
 
 def exit_gracefully():
-    sys.exit("^Program exited with error, please see the message above.^")
+    sys.exit("^Program exited with error, please see the message written in the file aKmerBroom.log^")
 
 
 def reverse_complement(seq):
@@ -12,6 +14,6 @@ def reverse_complement(seq):
 
 def test_valid_kmer_format(sample_line, kmer_size):
    if len(sample_line) != kmer_size:
-       print("Format of kmer file does not match kmer size specified")
+       logger.error("Format of kmer file does not match kmer size specified")
        exit_gracefully()
 

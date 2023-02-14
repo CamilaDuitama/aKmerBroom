@@ -1,4 +1,6 @@
 import argparse
+import os
+import logging
 from scripts import classify_reads, kmers
 
 
@@ -20,11 +22,32 @@ def main():
     parser.add_argument('--anchor_proportion_cutoff', help="Set anchor kmer proportion, \
         above which a read is classified as ancient (defaults to 0.5)",
                         required=False)
+
+    parser.add_argument("--output",
+                        help="Path to output folder, where you want aKmerBroom to write the results."
+                             "Folder must not exist, it won't be overwritten.", required=False,
+                        default="output")
+
     args = vars(parser.parse_args())
 
     bloom_filt = False
     bf_capacity = 0
     ancient_kmers = False
+
+    # Create and configure logger
+    logging.basicConfig(filename="aKmerBroom.log",
+    format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filemode='w')
+ 
+    # Creating an object
+    logger = logging.getLogger()
+ 
+    #check output folder does not exist else create folder
+    if os.path.isdir(args["output"]):
+        logger.error("Output directory already exists")
+        kmers.exit_gracefully()
+    else:
+        output=args["output"]
+        os.mkdir(output)
 
     # set kmer_size from argument or using default here
     if not args['kmer_size']:
@@ -33,7 +56,7 @@ def main():
         try:
             k_size = int(args['kmer_size'])
         except ValueError:
-            print("Error : kmer_size provided is not an integer")
+            logger.error("Error : kmer_size provided is not an integer")
             kmers.exit_gracefully()
 
     # set bloom filter
@@ -44,7 +67,7 @@ def main():
         try:
             bf_capacity = int(args['ancient_bloom_capacity'])
         except ValueError:
-            print("Error : ancient_bloom_capacity provided is not an integer")
+            logger.error("Error : ancient_bloom_capacity provided is not an integer")
             kmers.exit_gracefully()
     else:
         bf_capacity = 1000 * 1000 * 1000 * 2
@@ -59,13 +82,13 @@ def main():
     else:
         anchor_proportion_cutoff = float(args['anchor_proportion_cutoff'])
 
-    print("Started...")
+    logger.info("Started...")
     # declare defaults
-    print("Using default of k=31 and input folder='data'")
-    print("Shortlisting ancient reads")
-    anchor_kmer_set = classify_reads.classify_reads(bloom_filt, bf_capacity, ancient_kmers, k_size)
-    classify_reads.classify_reads_using_anchor_kmers(anchor_kmer_set, k_size, anchor_proportion_cutoff)
-    print("Completed successfully")
+    logger.info("Using default of k=31 and input folder='data'")
+    logger.info("Shortlisting ancient reads")
+    anchor_kmer_set = classify_reads.classify_reads(bloom_filt, bf_capacity, ancient_kmers, k_size,output)
+    classify_reads.classify_reads_using_anchor_kmers(anchor_kmer_set, k_size, anchor_proportion_cutoff,output)
+    logger.info("Completed successfully")
 
 
 if __name__ == "__main__":
