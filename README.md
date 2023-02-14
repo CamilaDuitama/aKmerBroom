@@ -65,7 +65,7 @@ ln -sf ../tests/unknown_reads.fastq .
 Next, download the Bloom Filter into the `data/` folder from the following link
 [ancient_bloom](https://zenodo.org/record/7587160/files/ancient_kmers.bloom?download=1). 
 Note that it could take a few minutes (file size = 3Gb). 
-This can be done from the command line using the `gdown` utility.
+This can be done from the command line using the `wget` utility.
 ```
 cd data/             # if you are not already in the data/ directory 
 wget https://zenodo.org/record/7587160/files/ancient_kmers.bloom -O ancient_kmers.bloom
