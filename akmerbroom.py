@@ -82,7 +82,7 @@ def main():
     if not args['n_consec_matches']:
         n_consec_matches = 2
     else:
-        anchor_proportion_cutoff = int(args['n_consec_matches'])
+        n_consec_matches = int(args['n_consec_matches'])
 
     # set anchor proportion cutoff
     if not args['anchor_proportion_cutoff']:
