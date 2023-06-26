@@ -34,7 +34,7 @@ def getbloomFilter(bf, bf_capacity, ancient_kmers, kmer_size):
     return ancient_kmers_bf
 
 
-def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size,output):
+def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size, n_consecutive_matches, output):
     ancient_kmers_bf = getbloomFilter(bf, bf_capacity, ancient_kmers, kmer_size)
     unknown_reads_file = "data/unknown_reads.fastq"
     annotated_reads_file = open(output+"/annotated_reads.fastq", "w")
@@ -67,9 +67,10 @@ def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size,output):
         for i in range(kmer_size-1):
             matches.append(12)       # need to add an extra k-1 empty matches since kmers are now all out
 
-        # get is_consecutive (i.e. at least 2 matches in a row)
+        # test if consecutive_matches is greater than or equal to n_consecutive_matches parameter
         stringified_matches = ''.join(str(match) for match in matches)
-        if '00' in stringified_matches:
+        consecutive_matches_string = n_consecutive_matches*'0'
+        if consecutive_matches_string in stringified_matches:
             consecutive_matches_found = 1
 
         if consecutive_matches_found:

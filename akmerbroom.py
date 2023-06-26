@@ -19,6 +19,8 @@ def main():
     parser.add_argument('--ancient_kmers_set', help='Use if ancient kmers set provided (defaults to False)',
                         action='store_true', required=False)
     parser.add_argument('--kmer_size', help='Set kmer size (defaults to 31)', required=False)
+    parser.add_argument('--n_consec_matches', help="Set number of consec matches to classify read as anchor read, \
+                                                   (defaults to 2)", required=False)
     parser.add_argument('--anchor_proportion_cutoff', help="Set anchor kmer proportion, \
         above which a read is classified as ancient (defaults to 0.5)",
                         required=False)
@@ -76,6 +78,12 @@ def main():
     if args['ancient_kmers_set']:
         ancient_kmers = True
 
+    # set n_consec_matches cutoff
+    if not args['n_consec_matches']:
+        n_consec_matches = 2
+    else:
+        n_consec_matches = int(args['n_consec_matches'])
+
     # set anchor proportion cutoff
     if not args['anchor_proportion_cutoff']:
         anchor_proportion_cutoff = 0.5
@@ -86,8 +94,16 @@ def main():
     # declare defaults
     logger.info("Using default of k=31 and input folder='data'")
     logger.info("Shortlisting ancient reads")
-    anchor_kmer_set = classify_reads.classify_reads(bloom_filt, bf_capacity, ancient_kmers, k_size,output)
-    classify_reads.classify_reads_using_anchor_kmers(anchor_kmer_set, k_size, anchor_proportion_cutoff,output)
+    anchor_kmer_set = classify_reads.classify_reads(bloom_filt,
+                                                    bf_capacity,
+                                                    ancient_kmers,
+                                                    k_size,
+                                                    n_consec_matches,
+                                                    output)
+    classify_reads.classify_reads_using_anchor_kmers(anchor_kmer_set,
+                                                     k_size,
+                                                     anchor_proportion_cutoff,
+                                                     output)
     logger.info("Completed successfully")
 
 
