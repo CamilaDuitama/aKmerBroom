@@ -28,6 +28,7 @@ The `data/` folder should contain the following input files:
 ancient_kmers.bloom : a bloom filter with ancient kmers
 unknown_reads.fastq : a file with reads which we want to classify as ancient or not
 [optional] ancient_kmers : a text file where each row is a known ancient kmer
+[optional] n_consec_matches : Number of consecutive matches in the Bloom Filter that should be used to classify a read as anchor read
 ```    
 
 ### Output 
