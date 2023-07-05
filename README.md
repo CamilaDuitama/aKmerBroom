@@ -78,7 +78,7 @@ This can be done from the command line using the `wget` utility.
 cd data/             # if you are not already in the data/ directory 
 wget https://zenodo.org/record/7587160/files/ancient_kmers.bloom -O ancient_kmers.bloom
 ```
-
+**NOTE:** This Bloom Filter was pre-constructed to reduce the running time and it is meant to be used on ancient oral samples only. The way it was constructed it's detailed on the filter, but it basically consists of clean k-mers that are of oral origin.
 
 Finally, run aKmerBroom
 ```
