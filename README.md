@@ -1,4 +1,5 @@
 # 🧹🦷aKmerBroom: Ancient oral DNA decontamination using Bloom filters on k-mer sets
+## Read paper (here)[https://www.cell.com/iscience/pdf/S2589-0042(23)02134-X.pdf]
 
 `aKmerBroom`is a tool to decontaminate ancient oral samples from a FASTA/FASTQ file. It does so in the following steps: 
 1. Build an `ancient_kmers.bloom` filter from an ancient kmers text file (if such a Bloom filter does not yet exist).
