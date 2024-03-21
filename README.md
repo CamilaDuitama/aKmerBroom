@@ -88,6 +88,5 @@ python akmerbroom.py --ancient_bloom
 ```
 
 The ancient reads file will be written to `output/annotated_reads_with_anchor_kmers.fastq`. 
-The majority of output reads should be from the aOral sample `@SRR13355797`, with a few false positives from non aOral `@ERR671934`.
 
 
