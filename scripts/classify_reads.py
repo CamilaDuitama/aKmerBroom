@@ -7,35 +7,52 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def getbloomFilter(bf, bf_capacity, ancient_kmers, kmer_size):
+def getbloomFilter(bf, bf_capacity, present_kmers, kmer_size):
+    """
+    Function to build and return a Bloom filter of the kmers that must be removed. Loads the
+    pre-built bloom filter if nothing is given by user.
+    bf: bool, true if no argument was given.
+    bf_capacity: size of the bloom filter to build.
+    present_kmers: path to file of kmers in text format.
+    kmer_size: int.
+    """
     if bf:
-        logger.info("Opening Bloom Filter of ancient kmers")
-        ancient_kmers_bf = BloomFilter.open("data/ancient_kmers.bloom")
+        logger.info("Opening Bloom Filter of present kmers")
+        present_kmers_bf = BloomFilter.open("data/present_kmers.bloom")
         logger.info("Done")
     else:
-        logger.info("Need to make Bloom Filter of ancient k-mers")
-        bf_filename = "data/ancient_kmers.bloom"
-        ancient_kmers_bf = BloomFilter(bf_capacity, .001, bf_filename)
+        logger.info("Need to make Bloom Filter of present k-mers")
+        bf_filename = "data/present_kmers.bloom"
+        present_kmers_bf = BloomFilter(bf_capacity, .001, bf_filename)
 
-        if ancient_kmers: # if ancient kmers txt file exist
-            ancient_kmers_file = "data/ancient_kmers"
-            with open(ancient_kmers_file, 'r') as ac_kmers:
+        if present_kmers: # if present kmers txt file exist
+            present_kmers_file = "data/present_kmers"
+            with open(present_kmers_file, 'r') as ac_kmers:
                 first_line = ac_kmers.readline().rstrip()
                 kmers.test_valid_kmer_format(first_line, kmer_size)
                 ac_kmers.seek(0)
                 for line in ac_kmers:
-                    # ancient_kmers_bf.add(line[:kmer_size])
-                    ancient_kmers_bf.add(line.rstrip())
+                    # present_kmers_bf.add(line[:kmer_size])
+                    present_kmers_bf.add(line.rstrip())
 
         else:
-            logger.error("Please provide an ancient kmer set")
+            logger.error("Please provide an present kmer set")
             kmers.exit_gracefully()
         logger.info("Done creating bloom filter")
-    return ancient_kmers_bf
+    return present_kmers_bf
 
-
-def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size, n_consecutive_matches, output):
-    ancient_kmers_bf = getbloomFilter(bf, bf_capacity, ancient_kmers, kmer_size)
+#TODO: modifier la fonction ci-dessous pour virer les sequences 'annotees' comme contaminantes
+def classify_reads(bf, bf_capacity, present_kmers, kmer_size, n_consecutive_matches, output):
+    """
+    Function that classifies seqeunces as ancient or present-day. Writes Ancient sequences in the output (fasta file format).
+    bf: bool, true if no argument was given.
+    bf_capacity: size of the bloom filter to build.
+    present_kmers: path to file of kmers in text format.
+    kmer_size: int .
+    n_consecutive_matches: int, number of match between kmers of the current read and bloom filter to set an anchor.
+    output: path to directory were output files will be written.
+    """
+    present_kmers_bf = getbloomFilter(bf, bf_capacity, present_kmers, kmer_size)
     unknown_reads_file = "data/unknown_reads.fastq"
     annotated_reads_file = open(output+"/annotated_reads.fastq", "w")
     read_count = 0
@@ -54,16 +71,16 @@ def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size, n_consecutive_matc
         length = len(to_kmerize_fwd)
         reverse = kmers.reverse_complement(to_kmerize_fwd)
         count_of_all_kmers_in_this_read = 0
-        count_of_ancient_kmers_in_this_read = 0
+        count_of_present_kmers_in_this_read = 0
         for i in range(0, length - kmer_size + 1):
             kmer = to_kmerize_fwd[i:i + kmer_size]
             curr_kmer_set.add(kmer)
             count_of_all_kmers_in_this_read += 1
-            if kmer in ancient_kmers_bf or reverse[length - kmer_size - i:length - i] in ancient_kmers_bf:
-                count_of_ancient_kmers_in_this_read += 1
-                matches.append(0)    # match to ancient kmer found, represented by '!'
+            if kmer in present_kmers_bf or reverse[length - kmer_size - i:length - i] in present_kmers_bf:
+                count_of_present_kmers_in_this_read += 1
+                matches.append(0)    # match to present kmer found, represented by '!'
             else:
-                matches.append(12)   # match to ancient kmer not found, represented by '-'
+                matches.append(12)   # match to present kmer not found, represented by '-'
         for i in range(kmer_size-1):
             matches.append(12)       # need to add an extra k-1 empty matches since kmers are now all out
 
@@ -88,7 +105,15 @@ def classify_reads(bf, bf_capacity, ancient_kmers, kmer_size, n_consecutive_matc
     return anchor_kmer_set
 
 
+#TODO: changer les noms de merde des fichiers de sortie.
 def classify_reads_using_anchor_kmers(anchor_kmer_set, kmer_size, anchor_proportion_cutoff,output):
+    """
+    anchor_kmer_set: set of kmers.
+    kmers_size: int.
+    kmer_size: int.
+    anchor_proportion_cutoff: float, percentage of kmers from a read that are from contamination.
+    output: path to directory were output files will be written.
+    """
     ip_reads_file = output+"/annotated_reads.fastq"
     op_reads_file = open(output+"/annotated_reads_with_anchor_kmers.fastq", "w")
     read_count = 0
@@ -116,7 +141,7 @@ def classify_reads_using_anchor_kmers(anchor_kmer_set, kmer_size, anchor_proport
         except ZeroDivisionError:
             anchor_proportion = 0
 
-        # select ancient reads if they meet the proportion cutoff
+        # select present reads if they meet the proportion cutoff
         if anchor_proportion >= anchor_proportion_cutoff:
             new_record = SeqIO.SeqRecord(seq=record.seq,
                                          id=record.id,

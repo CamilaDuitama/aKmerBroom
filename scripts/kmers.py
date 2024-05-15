@@ -4,7 +4,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 def exit_gracefully():
-    sys.exit("^Program exited with error, please see the message written in the file aKmerBroom.log^")
+    sys.exit("^Program exited with error, please see the message written in the file aKmerBroom.log located in the current working directory.^")
 
 
 def reverse_complement(seq):
