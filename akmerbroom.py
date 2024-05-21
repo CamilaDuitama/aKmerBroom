@@ -16,8 +16,7 @@ def main():
     """
     parser = argparse.ArgumentParser(
         description='This program finds removes present-day reads to only keep the ancient DNA.',
-        epilog="Ex: python3 akmerbroom.py -i test1.fastq test2.fastq -t 2 --present_kmers_set kmers.txt"
-               "\nEX: python3 akmerbroom.py -i $(find ./*.fastq) -t 2 --present_kmers_set kmers.txt")
+        epilog="Ex: python3 akmerbroom.py -i test1.fastq test2.fastq -t 2 --present_kmers_set kmers.txt\nEX: python3 akmerbroom.py -i $(find ./*.fastq) -t 2 --present_kmers_set kmers.txt")
     parser.add_argument('--present_bloom', help='Use if present BloomFilter provided (defaults to False)',
                         type=str, action='store', required=False, default="")
     parser.add_argument("--present_bloom_capacity", type=int, help="If present BloomFilter is not provided, \
@@ -31,7 +30,7 @@ def main():
     parser.add_argument('--anchor_proportion_cutoff', help="Set anchor kmer proportion, \
         above which a read is classified as present (defaults to 0.5)",
                         required=False)
-    parser.add_argument('i', '--input', help="Path to input file(s), space-separated", required=True, nargs='+')
+    parser.add_argument('-i', '--input', help="Path to input file(s), space-separated", required=True, nargs='+')
     parser.add_argument("-o", "--output",
                         help="Path to output folder, where you want aKmerBroom to write the results.", required=True,
                         default="output")
