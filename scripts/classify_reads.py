@@ -56,13 +56,13 @@ def classify_reads(fastq_file, bloom_filter, kmer_size, n_consecutive_matches, o
     shared_anchor_kmer_set: set of anchor kmers for reads, shared between processes
     :returns: path to directory were output files will be written.
     """
-    unknown_reads_file = fastq_file
-    print(unknown_reads_file)
+    logger.info(f"Classifying reads for input file {fastq_file}")
+    print(f"Classifying reads for input file {fastq_file}", flush=True)
     annotated_reads_file = open(output+"/"+fastq_file.split("/")[-1].rstrip(".fastq")+"_annotated_reads.fastq", "w")
     read_count = 0
     anchor_kmer_set = set()
 
-    for record in SeqIO.parse(unknown_reads_file, "fastq"):
+    for record in SeqIO.parse(fastq_file, "fastq"):
         matches = []
         consecutive_matches_found = 0
         curr_kmer_set = set()
@@ -106,7 +106,6 @@ def classify_reads(fastq_file, bloom_filter, kmer_size, n_consecutive_matches, o
 
     annotated_reads_file.close()
     shared_anchor_kmer_set.update(anchor_kmer_set)
-    time.sleep(2)
     return shared_anchor_kmer_set
 
 
@@ -123,7 +122,6 @@ def classify_reads_using_anchor_kmers(input_file, anchor_kmer_set_test, kmer_siz
     ip_reads_file = output +"/" + input_file.split("/")[-1].rstrip(".fastq") + "_annotated_reads.fastq"
     op_reads_file = open(output +"/" + input_file.split("/")[-1].rstrip("annotated_reads.fastq") + "_decontaminated.fastq", "w")
     anchor_kmer_set = str(anchor_kmer_set_test)
-    print(anchor_kmer_set)
     read_count = 0
     for record in SeqIO.parse(ip_reads_file, "fastq"):
         score = record.letter_annotations["phred_quality"]
