@@ -17,7 +17,8 @@ def main():
     """
     parser = argparse.ArgumentParser(
         description='This program finds removes present-day reads to only keep the ancient DNA.',
-        epilog="Ex: python3 akmerbroom.py -i test1.fastq test2.fastq -t 2 --present_kmers_set kmers.txt")
+        epilog="Ex: python3 akmerbroom.py -i test1.fastq test2.fastq -t 2 --present_kmers_set kmers.txt"
+               "\nEX: python3 akmerbroom.py -i $(find ./*.fastq) -t 2 --present_kmers_set kmers.txt")
     parser.add_argument('--present_bloom', help='Use if present BloomFilter provided (defaults to False)',
                         type=str, action='store', required=False, default="")
     parser.add_argument("--present_bloom_capacity", type=int, help="If present BloomFilter is not provided, \
@@ -93,11 +94,6 @@ def main():
     else:
         bf_capacity = 1000 * 1000 * 1000 * 2
 
-    #TODO:verifier que je peux virer ce bout la
-    # present kmers set
-
-    if os.path.isfile(args['present_kmers_set']):
-        present_kmers = True
 
     # set n_consec_matches cutoffTrue
     if not args['n_consec_matches']:
@@ -116,6 +112,7 @@ def main():
     # declare defaults
     logger.info("Shortlisting present reads")
     # builds the bloom filter once for all
+    print("Getting the Bloom Filter ready ...")
     present_kmers_bf = classify_reads.getbloomFilter(args["present_bloom"], bf_capacity, args["present_kmers_set"],
                                                                   k_size, args["output"])
 
@@ -128,9 +125,7 @@ def main():
     class CustomManager(BaseManager):
         # nothing
         pass
-
     CustomManager.register('set', set)
-
     manager = CustomManager()
     manager.start()
     shared_kmer_set = manager.set()
@@ -173,6 +168,7 @@ def main():
         process.terminate()
 
     logger.info("Completed successfully")
+    print("Done !")
 
 
 if __name__ == "__main__":
