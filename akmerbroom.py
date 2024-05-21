@@ -4,7 +4,6 @@ import logging
 from scripts import classify_reads, kmers
 from multiprocessing import Pool, Value, Process
 from multiprocessing.managers import BaseManager
-from pybloomfilter import BloomFilter
 from ctypes import c_wchar_p
 
 
@@ -26,14 +25,14 @@ def main():
         in present kmers input file")
     parser.add_argument('--present_kmers_set', help='Use if present kmers set provided (defaults to False)',
                         type=str, action='store', required=False, default="")
-    parser.add_argument('--kmer_size', type=int, help='Set kmer size (defaults to 31)', required=False)
+    parser.add_argument('-k', '--kmer_size', type=int, help='Set kmer size (defaults to 31)', required=False)
     parser.add_argument('--n_consec_matches', type=int, help="Set number of consec matches to classify read as anchor read, \
                                                    (defaults to 2)", required=False)
     parser.add_argument('--anchor_proportion_cutoff', help="Set anchor kmer proportion, \
         above which a read is classified as present (defaults to 0.5)",
                         required=False)
-    parser.add_argument('--input', help="Path to input file(s), space-separated", required=True, nargs='+')
-    parser.add_argument("--output",
+    parser.add_argument('i', '--input', help="Path to input file(s), space-separated", required=True, nargs='+')
+    parser.add_argument("-o", "--output",
                         help="Path to output folder, where you want aKmerBroom to write the results.", required=True,
                         default="output")
     parser.add_argument("-t", "--threads", help="Number of threads to use", default=1, type=int)
