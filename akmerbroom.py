@@ -2,7 +2,7 @@ import argparse
 import os
 import logging
 from scripts import classify_reads, kmers
-from multiprocessing import Pool, Value, Process
+from multiprocessing import Value, Process, Pool
 from multiprocessing.managers import BaseManager
 from ctypes import c_wchar_p
 
@@ -34,13 +34,11 @@ def main():
     parser.add_argument("-o", "--output",
                         help="Path to output folder, where you want aKmerBroom to write the results.", required=True,
                         default="output")
-    parser.add_argument("-t", "--threads", help="Number of threads to use", default=1, type=int)
+    parser.add_argument("-t", "--threads", help="WARNING: right now, not used. Sorry, async is a pain. Number of threads to use", default=1, type=int)
 
     args = vars(parser.parse_args())
 
-    #bloom_filt = False
     bf_capacity = 0
-    #present_kmers = False
 
     # Create and configure logger
     logging.basicConfig(filename="aKmerBroom.log",
@@ -80,7 +78,6 @@ def main():
     if not os.path.isfile(args['present_bloom']) and not os.path.isfile(args['present_kmers_set']):
         logger.error("Error: please provide a kmer set or a bloom filter.")
         kmers.exit_gracefully()
-        #bloom_filt = True
 
         bf_capacity = None
     elif args['present_bloom_capacity']:
@@ -123,47 +120,58 @@ def main():
     class CustomManager(BaseManager):
         # nothing
         pass
-    CustomManager.register('set', set)
+    CustomManager.register('shared_set', set)
     manager = CustomManager()
     manager.start()
-    shared_kmer_set = manager.set()
+    shared_kmer_set = manager.shared_set()
 
     # paralleled anchor sets construction
-    #with Pool(processes=args["threads"]) as pool:
-        #for i in args["input"]:
-    #        print(i)
-            #classify_reads.classify_reads(i, present_kmers_bf, shared_k_size.value, shared_n_consec_matches.value, shared_output.value)
-        #    pool.apply_async(classify_reads.classify_reads,
-        #                     args=(i, present_kmers_bf, shared_k_size.value, shared_n_consec_matches.value, shared_output.value),
-        #                     callback=collect_sets)
-    #    pool.close()
-    #    pool.join()
+    # with Pool(processes=args["threads"]) as pool:
+    #     #classify_reads.classify_reads(i, present_kmers_bf, shared_k_size.value, shared_n_consec_matches.value, shared_output.value)
+    #     results = [pool.apply_async(classify_reads.classify_reads,
+    #                          args=(i, present_kmers_bf, shared_k_size.value, shared_n_consec_matches.value, shared_output.value, shared_kmer_set)) for i in args["input"]]
+    #     pool.close()
+    #     pool.join()
+
+    # with Pool(processes=args["threads"]) as pool:
+    #     results = [pool.apply_async(classify_reads.classify_reads, args=(i, shared_kmer_set,
+    #                                                                                         shared_k_size.value,
+    #                                                                                         shared_anchor_proportion_cutoff,
+    #                                                                                         shared_output.value,)) for i
+    #                in args["input"]]
+    #     pool.close()
+    #     pool.join()
+
 
     processes = [Process(target=classify_reads.classify_reads, args=(i, present_kmers_bf, shared_k_size.value, shared_n_consec_matches.value, shared_output.value, shared_kmer_set)) for i in args["input"]]
-    for process in processes:
-        process.start()
+    for i in range(0, len(processes), args["threads"]):
+        for process in processes[i:i + args["threads"]]:
+            process.start()
     for process in processes:
         process.join()
     for process in processes:
         process.terminate()
 
-    #with Pool(processes=args["threads"]) as pool:
-    #    for i in args["input"]:
-            #classify_reads.classify_reads_using_anchor_kmers(i, present_kmers_bf, k_size, anchor_proportion_cutoff, args["output"])
-    #        pool.apply_async(classify_reads.classify_reads_using_anchor_kmers, args=(i, shared_kmer_set,
+    # with Pool(processes=args["threads"]) as pool:
+    #     print(f"starting async")
+    #     #classify_reads.classify_reads_using_anchor_kmers(i, present_kmers_bf, k_size, anchor_proportion_cutoff, args["output"])
+    #     results = [pool.apply_async(classify_reads.classify_reads_using_anchor_kmers, args=(i, shared_kmer_set,
     #                                                                                 shared_k_size.value,
     #                                                                                 shared_anchor_proportion_cutoff,
-    #                                                                                 shared_output.value,))
-    #    pool.close()
-    #    pool.join()
+    #                                                                                 shared_output.value,)) for i in args["input"] ]
+    #     pool.close()
+    #     pool.join()
+    #
 
     processes = [Process(target=classify_reads.classify_reads_using_anchor_kmers, args=(i, shared_kmer_set, shared_k_size.value, shared_anchor_proportion_cutoff.value, shared_output.value)) for i in args["input"]]
-    for process in processes:
-        process.start()
+    for i in range(0, len(processes), args["threads"]):
+        for process in processes[i:i + args["threads"]]:
+            process.start()
     for process in processes:
         process.join()
     for process in processes:
         process.terminate()
+
 
     logger.info("Completed successfully")
     print("Done !")

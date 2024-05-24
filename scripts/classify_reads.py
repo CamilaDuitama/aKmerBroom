@@ -4,6 +4,7 @@ import os.path
 import time
 
 from Bio import SeqIO
+from Bio.SeqRecord import SeqRecord
 from scripts import kmers
 from pybloomfilter import BloomFilter
 import logging
@@ -106,8 +107,6 @@ def classify_reads(fastq_file, bloom_filter, kmer_size, n_consecutive_matches, o
 
     annotated_reads_file.close()
     shared_anchor_kmer_set.update(anchor_kmer_set)
-    return shared_anchor_kmer_set
-
 
 def classify_reads_using_anchor_kmers(input_file, anchor_kmer_set_test, kmer_size, anchor_proportion_cutoff, output):
     """
@@ -117,16 +116,16 @@ def classify_reads_using_anchor_kmers(input_file, anchor_kmer_set_test, kmer_siz
     anchor_proportion_cutoff: float, percentage of kmers from a read that are from contamination.
     output: path to directory were output files will be written.
     """
-    #ip_reads_file = output+"/annotated_reads.fastq"
-    #op_reads_file = open(output+"/annotated_reads_with_anchor_kmers.fastq", "w")
     ip_reads_file = output +"/" + input_file.split("/")[-1].rstrip(".fastq") + "_annotated_reads.fastq"
     op_reads_file = open(output +"/" + input_file.split("/")[-1].rstrip("annotated_reads.fastq") + "_decontaminated.fastq", "w")
-    anchor_kmer_set = str(anchor_kmer_set_test)
+    print(f"Classifying reads for input file {ip_reads_file}, final round.", flush=True)
+    anchor_kmer_set = anchor_kmer_set_test.copy()
     read_count = 0
     for record in SeqIO.parse(ip_reads_file, "fastq"):
         score = record.letter_annotations["phred_quality"]
         read_count += 1
         if read_count % 100000 == 0:
+            print(f"No. of reads seen so far for file {ip_reads_file}: {read_count}")
             logger.info("No. of reads seen so far: " + str(read_count))
 
         to_kmerize_fwd = str(record.seq).upper()
@@ -142,11 +141,9 @@ def classify_reads_using_anchor_kmers(input_file, anchor_kmer_set_test, kmer_siz
 
         # compute anchor_proportion
         try:
-            #print(count_of_anchor_kmers_in_this_read)
             anchor_proportion = round((count_of_anchor_kmers_in_this_read / count_of_all_kmers_in_this_read), 2)
         except ZeroDivisionError:
             anchor_proportion = 0
-
         # select present reads if they meet the proportion cutoff
         if anchor_proportion >= anchor_proportion_cutoff:
             new_record = SeqIO.SeqRecord(seq=record.seq,
@@ -157,4 +154,3 @@ def classify_reads_using_anchor_kmers(input_file, anchor_kmer_set_test, kmer_siz
             SeqIO.write(new_record, op_reads_file, "fastq")
 
     op_reads_file.close()
-    return
