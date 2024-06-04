@@ -1,9 +1,6 @@
 name: broom
 channels:
-  - cruizperez
-  - bioconda
   - conda-forge
-  - defaults
 dependencies:
   - _libgcc_mutex=0.1=conda_forge
   - _openmp_mutex=4.5=2_gnu
@@ -22,7 +19,7 @@ dependencies:
   - ncurses=6.4.20240210=h59595ed_0
   - openssl=3.2.1=hd590300_1
   - pip=24.0=pyhd8ed1ab_0
-  - python=3.11.3
+  - python=3.11.3=h2755cc3_0_cpython
   - readline=8.2=h8228510_1
   - setuptools=69.5.1=pyhd8ed1ab_0
   - tk=8.6.13=noxft_h4845f30_101
@@ -32,5 +29,7 @@ dependencies:
   - pip:
       - biopython==1.83
       - cython==3.0.10
+      - dill==0.3.8
+      - multiprocess==0.70.16
       - numpy==1.26.4
       - pybloomfiltermmap3==0.5.7
