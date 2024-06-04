@@ -6,6 +6,7 @@
 2. Output folder is created if needed, otherwise there is just a warning it already exists.
 3. Each input file is split into two output files, both using the same name prefix. One is the decontaminated sequences, the other contains the contaminating sequences.
 4. Each input file is processed in parallel.
+5. Once the anchor kmers of each input file are computed, all the sets are combined into a union of the sets.
 
 ![pipeline_svg.png](https://raw.githubusercontent.com/CamilaDuitama/aKmerBroom/main/pipeline_svg.png)**aKmerBroom pipeline:** First, an offline step is performed: a collection of samples representative from diverse sources is used to create a trusted set of oral kmers. The trusted collection indexes kmers that appear exclusively in modern and ancient oral samples, but not other samples from contaminant sources (see panel on the left called Collection of datasets). Then this set of oral kmers is used to decontaminate an input set of reads. The algorithm proceeds by looking up each read kmer inside the Bloom Filter of trusted oral kmers, and marking positions of matches. Reads having at least two consecutive matches to the Bloom Filter get passed to the construction of a set containing all kmers from such reads. Finally, the same input reads are scanned again using the aforementioned set, and reads having a proportion of kmer matches over a certain threshold are reported to be of ancient oral origin.
 
