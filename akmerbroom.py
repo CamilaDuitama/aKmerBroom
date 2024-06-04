@@ -2,7 +2,7 @@ import argparse
 import os
 import logging
 from scripts import classify_reads, kmers
-from multiprocessing import Value, Process, Pool
+from multiprocessing import Value, Process
 from multiprocessing.managers import BaseManager
 from ctypes import c_wchar_p
 

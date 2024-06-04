@@ -4,7 +4,6 @@ import os.path
 import time
 
 from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
 from scripts import kmers
 from pybloomfilter import BloomFilter
 import logging
@@ -117,7 +116,8 @@ def classify_reads_using_anchor_kmers(input_file, anchor_kmer_set_test, kmer_siz
     output: path to directory were output files will be written.
     """
     ip_reads_file = output +"/" + input_file.split("/")[-1].rstrip(".fastq") + "_annotated_reads.fastq"
-    op_reads_file = open(output +"/" + input_file.split("/")[-1].rstrip("annotated_reads.fastq") + "_decontaminated.fastq", "w")
+    op_read_file_decontam = open(output +"/" + input_file.split("/")[-1].rstrip("annotated_reads.fastq") + "_decontaminated.fastq", "w")
+    op_read_file_contam = open(output + "/" + input_file.split("/")[-1].rstrip("annotated_reads.fastq") + "_contamination.fastq", "w")
     print(f"Classifying reads for input file {ip_reads_file}, final round.", flush=True)
     anchor_kmer_set = anchor_kmer_set_test.copy()
     read_count = 0
@@ -151,6 +151,9 @@ def classify_reads_using_anchor_kmers(input_file, anchor_kmer_set_test, kmer_siz
                                          description=record.description + " " + str(anchor_proportion),
                                          letter_annotations={'phred_quality': score},
                                          )
-            SeqIO.write(new_record, op_reads_file, "fastq")
+            SeqIO.write(new_record, op_read_file_decontam, "fastq")
+        else:
+            SeqIO.write(record, op_read_file_contam, "fastq")
 
-    op_reads_file.close()
+    op_read_file_decontam.close()
+    op_read_file_contam.close()
