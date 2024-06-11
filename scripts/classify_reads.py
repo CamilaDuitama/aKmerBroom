@@ -1,7 +1,6 @@
 from __future__ import division
 
 import os.path
-import time
 
 from Bio import SeqIO
 from scripts import kmers
@@ -151,9 +150,9 @@ def classify_reads_using_anchor_kmers(input_file, anchor_kmer_set_test, kmer_siz
                                          description=record.description + " " + str(anchor_proportion),
                                          letter_annotations={'phred_quality': score},
                                          )
-            SeqIO.write(new_record, op_read_file_decontam, "fastq")
+            SeqIO.write(new_record, op_read_file_contam, "fastq")
         else:
-            SeqIO.write(record, op_read_file_contam, "fastq")
+            SeqIO.write(record, op_read_file_decontam, "fastq")
 
     op_read_file_decontam.close()
     op_read_file_contam.close()
