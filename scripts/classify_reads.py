@@ -6,18 +6,21 @@ from Bio import SeqIO
 from scripts import kmers
 from pybloomfilter import BloomFilter
 import logging
+from typing import Union
+
 
 logger = logging.getLogger(__name__)
 
 
-def getbloomFilter(bf, bf_capacity, present_kmers_file, kmer_size, output):
+def getbloomFilter(bf, bf_capacity, present_kmers_file: Union[str, bytes, os.PathLike], kmer_size: int, output: Union[str, bytes, os.PathLike]):
     """
-    Function to build and return a Bloom filter of the kmers that must be removed. Loads the
-    pre-built bloom filter if nothing is given by user.
-    bf: bool, true if no argument was given.
-    bf_capacity: size of the bloom filter to build.
-    present_kmers: path to file of kmers in text format.
-    kmer_size: int.
+    Opens the bloom filter or transforms the set of kmers given as user input into a bloom filter.
+    :param bf: str/path to bloom filter.
+    :param bf_capacity: int.
+    :param present_kmers_file: str/path to kmers set file.
+    :param kmer_size: int.
+    :param output: str/path to output directory.
+    :return: bloomfilter.
     """
     if os.path.isfile(bf):
         logger.info("Opening Bloom Filter of present kmers")
@@ -44,16 +47,17 @@ def getbloomFilter(bf, bf_capacity, present_kmers_file, kmer_size, output):
     return present_kmers_bf
 
 
-def classify_reads(fastq_file, bloom_filter, kmer_size, n_consecutive_matches, output, shared_anchor_kmer_set):
+def classify_reads(fastq_file: Union[str, bytes, os.PathLike], bloom_filter, kmer_size: int, n_consecutive_matches: int, output: Union[str, bytes, os.PathLike], shared_anchor_kmer_set):
     """
-    Function that classifies sequences as ancient or present-day. Writes Ancient sequences in the output (fasta file format).
-    :parameters:
-    fastq_file : path to a fastq file
-    bloom_filter: path to ptythonbloomfiltermmap3 filter
-    kmer_size: int .
-    n_consecutive_matches: int, number of match between kmers of the current read and bloom filter to set an anchor.
-    shared_anchor_kmer_set: set of anchor kmers for reads, shared between processes
-    :returns: path to directory were output files will be written.
+    First pass. Uses the bloom filter/kmer set to detect anchors (>=2 consecutive reference kmers in a read), and enrich
+     a anchor set with reference kmers + other kmers from a read with >1 anchor.
+    :param fastq_file: string/path to fastq file.
+    :param bloom_filter: BloomFilter.
+    :param kmer_size: int.
+    :param n_consecutive_matches: int.
+    :param output: string/path to output directory.
+    :param shared_anchor_kmer_set: shared-memory set of kmers, reference+others.
+    :return: updates the shared-memory set of kmers.
     """
     logger.info(f"Classifying reads for input file {fastq_file}")
     print(f"Classifying reads for input file {fastq_file}", flush=True)
@@ -106,19 +110,21 @@ def classify_reads(fastq_file, bloom_filter, kmer_size, n_consecutive_matches, o
     annotated_reads_file.close()
     shared_anchor_kmer_set.update(anchor_kmer_set)
 
-def classify_reads_using_anchor_kmers(input_file, anchor_kmer_set_test, kmer_size, anchor_proportion_cutoff, output):
+def classify_reads_using_anchor_kmers(input_file: Union[str, bytes, os.PathLike], anchor_kmer_set, kmer_size: int, anchor_proportion_cutoff: float, output: Union[str, bytes, os.PathLike]):
     """
-    anchor_kmer_set: set of kmers.
-    kmers_size: int.
-    kmer_size: int.
-    anchor_proportion_cutoff: float, percentage of kmers from a read that are from contamination.
-    output: path to directory were output files will be written.
+    Second pass of analysis of reads to classify them as contamination or not. USes the anchor set as a reference.
+    :param input_file:
+    :param anchor_kmer_set:
+    :param kmer_size:
+    :param anchor_proportion_cutoff:
+    :param output:
+    :return: nothing
     """
     ip_reads_file = output +"/" + input_file.split("/")[-1].rstrip(".fastq") + "_annotated_reads.fastq"
     op_read_file_decontam = open(output +"/" + input_file.split("/")[-1].rstrip("annotated_reads.fastq") + "_decontaminated.fastq", "w")
     op_read_file_contam = open(output + "/" + input_file.split("/")[-1].rstrip("annotated_reads.fastq") + "_contamination.fastq", "w")
     print(f"Classifying reads for input file {ip_reads_file}, final round.", flush=True)
-    anchor_kmer_set = anchor_kmer_set_test.copy()
+    anchor_kmer_set = anchor_kmer_set.copy() #TODO: voir si ca impact les perfs a mort ou si c'est le bon choix
     read_count = 0
     for record in SeqIO.parse(ip_reads_file, "fastq"):
         score = record.letter_annotations["phred_quality"]
