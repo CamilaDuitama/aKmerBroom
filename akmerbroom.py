@@ -1,42 +1,52 @@
 import argparse
 import os
 import logging
+import sys
+
 from scripts import classify_reads, kmers
 from multiprocessing import Value, Process, Pool
 from multiprocessing.managers import BaseManager
 from ctypes import c_wchar_p
 
 
+#TODO: make the single or multi-sample decontamination an option (through a (non-)shared object of anchor_kmers)
+#TODO: arg pour dire si la ref est ancienne ou presente et en consequence retirer ce qui est reconnu ou le garder: DONE
+#TODO: verifier que le multi-threading est tjrs pas possible sur la seconde passe
+
 def main():
     """
     Main function.
     """
     parser = argparse.ArgumentParser(
-        description='This program finds removes present-day reads to only keep the ancient DNA.',
-        epilog="Ex: python3 akmerbroom.py -i test1.fastq test2.fastq -t 2 --present_kmers_set kmers.txt\n"
-               "EX: python3 akmerbroom.py -i $(find ./*.fastq) -t 2 --present_kmers_set kmers.txt")
-    parser.add_argument('--present_bloom', help='Use if present BloomFilter provided (defaults to False)',
+        description='This program finds uses a reference (either a bloom filter or kmers) to recognise targeted DNA \
+        (ancient or present) reads to only keep the ancient DNA. If an ancient reference is given, recognised DNA will \
+        be kept, otherwise it will be removed.',
+        usage='%(prog)s [options]',
+        epilog="EX: python3 akmerbroom.py -i $(find ./tests/*.fastq) -o ./output -t 2 --kmers_set kmers.txt")
+    parser.add_argument('--bloom', help='Used if a BloomFilter is provided (defaults to False)',
                         type=str, action='store', required=False, default="")
-    parser.add_argument("--present_bloom_capacity", type=int, help="If present BloomFilter is not provided, \
-        This sets the capacity of the bloom filter. This should be greater than the number of distinct kmers \
-        in present kmers input file")
-    parser.add_argument('--present_kmers_set', help='Use if present kmers set provided (defaults to False)',
+    parser.add_argument("--bloom_capacity", type=int, help="If a BloomFilter is not provided, \
+                       this sets the capacity of the bloom filter. This should be greater than the number of distinct \
+                       kmers in the input file. Default to 2 billion.")
+    parser.add_argument('--kmers_set', help='Used if a kmers set is provided (defaults to False).',
                         type=str, action='store', required=False, default="")
     parser.add_argument('-k', '--kmer_size', type=int, help='Set kmer size (defaults to 31)', required=False,
                         default=31)
-    parser.add_argument('--n_consec_matches', type=int, help="Set number of consec matches to classify" \
-                                                             " read as anchor read, (defaults to 2)", default=2,
-                        required=False)
+    parser.add_argument('--n_consec_matches', type=int, help="Set number of consec matches to classify \
+                        read as anchor read, (defaults to 2).", default=2, required=False)
     parser.add_argument('--anchor_proportion_cutoff', help="Set anchor kmer proportion, \
-        above which a read is classified as present (defaults to 0.5)", default=0.5, type=float,
+                        above which a read is classified as present (defaults to 0.5)", default=0.5, type=float,
                         required=False)
-    parser.add_argument('-i', '--input', help="Path to input file(s), space-separated", required=True, nargs='+')
+    parser.add_argument('-i', '--input', help="Path to input file(s), space-separated.", required=True, nargs='+')
     parser.add_argument("-o", "--output",
-                        help="Path to output folder, where you want aKmerBroom to write the results.", required=True,
-                        default="output")
+                        help="Path to output folder, where you want aKmerBroom to write the results.", required=True)
     parser.add_argument("-t", "--threads",
-                        help="WARNING: right now, not used. Sorry, async is a pain. Number of threads to use",
+                        help="WARNING: right now, not used. Sorry, async is a pain. Number of threads to use, default to 1.",
                         default=1, type=int)
+    parser.add_argument("-s", "--single", type=bool, help="Decontaminates samples independently \
+                        instead of pooling k-mers from multi-samples for decontamination.")
+    parser.add_argument("-p", "--present", type=bool, default=False, help="Flag to indicate that reference \
+                        is present DNA (defaults to False).")
 
     args = vars(parser.parse_args())
 
@@ -53,6 +63,15 @@ def main():
     if os.path.isdir(args["output"]):
         print(f"Output directory {args['output']} already exists. Content might be overwritten.")
         logger.warning("Output directory already exists. Content might be overwritten.")
+        user_response = ""
+        while user_response.lower() != "y" or user_response.lower() != "n":
+            user_response = input("Continue? (y/n) ")
+            if user_response.lower() == "n":
+                logger.warning("Output directory NOT overwritten.")
+                kmers.exit_gracefully()
+            else:
+                logger.warning("Output directory overwritten.")
+                break
     else:
         output = args["output"]
         os.mkdir(output)
@@ -68,14 +87,14 @@ def main():
         kmers.exit_gracefully()
 
     # checks existence of present kmers in any form
-    if not os.path.isfile(args['present_bloom']) and not os.path.isfile(args['present_kmers_set']):
+    if not os.path.isfile(args['bloom']) and not os.path.isfile(args['kmers_set']):
         logger.error("Please provide a kmer set or a bloom filter.")
         kmers.exit_gracefully()
-    elif args['present_bloom_capacity']:
+    elif args['bloom_capacity']:
         try:
-            bf_capacity = int(args['present_bloom_capacity'])
+            bf_capacity = int(args['bloom_capacity'])
         except ValueError:
-            logger.error("Present_bloom_capacity provided is not an integer.")
+            logger.error("bloom_capacity provided is not an integer.")
             kmers.exit_gracefully()
     else:
         bf_capacity = 1000 * 1000 * 1000 * 2
@@ -85,7 +104,7 @@ def main():
     logger.info("Shortlisting present reads")
     # builds the bloom filter once for all
     print("Getting the Bloom Filter ready ...")
-    present_kmers_bf = classify_reads.getbloomFilter(args["present_bloom"], bf_capacity, args["present_kmers_set"],
+    kmers_bf = classify_reads.getbloomFilter(args["bloom"], bf_capacity, args["kmers_set"],
                                                      args["kmer_size"], args["output"])
 
     # create Values for shared memory for the parameters
@@ -93,6 +112,7 @@ def main():
     shared_n_consec_matches = Value('i', args['n_consec_matches'])
     shared_output = Value(c_wchar_p, args["output"])
     shared_anchor_proportion_cutoff = Value('f', args["anchor_proportion_cutoff"])
+    shared_present_DNA_flag = Value('i', args['present'])
 
     # creates a custom manager for a set in shared memory
     class CustomManager(BaseManager):
@@ -104,11 +124,13 @@ def main():
     manager.start()
     shared_kmer_set = manager.shared_set()
 
+    #TODO: trouver quelle partie de ce code etait reliee au bug multithread et mettre l'issue ou la retrouver dans les commit
+
     # with Pool(processes=args["threads"]) as pool:
     #     print(f"starting async")
     #     for i in args["input"]:
     #         print(i)
-    #         test = pool.apply_async(classify_reads.classify_reads, args=(i, present_kmers_bf,
+    #         test = pool.apply_async(classify_reads.classify_reads, args=(i, kmers_bf,
     #                                                               shared_k_size.value,
     #                                                               shared_n_consec_matches.value,
     #                                                               shared_output.value,
@@ -118,12 +140,14 @@ def main():
 
     # with Pool(processes=args["threads"]) as pool:
     #     for i in args["input"]:
-    #         pool.apply_async(classify_reads.classify_reads, args=(i, present_kmers_bf, shared_k_size.value, shared_n_consec_matches.value, shared_output.value, shared_kmer_set))
+    #         pool.apply_async(classify_reads.classify_reads, args=(i, kmers_bf, shared_k_size.value, shared_n_consec_matches.value, shared_output.value, shared_kmer_set))
     #     pool.close()
     #     pool.join()
 
+    #TODO; modifier ce bout de code pour permettre de faire en single-sample
+    #TODO: soit je fais un if ici pour passer en multi-threading soit je le mets dans la fonction : la modification necessaire serait de copier le bloom et de pas le partager a la fin, mais embarquer sur la suite avec la copie augmentee sans s'arreter pour join
     processes = [Process(target=classify_reads.classify_reads, args=(
-        i, present_kmers_bf, shared_k_size.value, shared_n_consec_matches.value, shared_output.value, shared_kmer_set))
+        i, kmers_bf, shared_k_size.value, shared_n_consec_matches.value, shared_output.value, shared_kmer_set))
                  for
                  i in args["input"]]
     for i in range(0, len(processes), args["threads"]):
@@ -139,7 +163,8 @@ def main():
             pool.apply_async(classify_reads.classify_reads_using_anchor_kmers, args=(i, shared_kmer_set,
                                                                                      shared_k_size.value,
                                                                                      shared_anchor_proportion_cutoff.value,
-                                                                                     shared_output.value,))
+                                                                                     shared_output.value,
+                                                                                     shared_present_DNA_flag.value))
         pool.close()
         pool.join()
 
