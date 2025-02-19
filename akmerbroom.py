@@ -18,9 +18,9 @@ def main():
     Main function.
     """
     parser = argparse.ArgumentParser(
-        description='This program finds uses a reference (either a bloom filter or kmers) to recognise targeted DNA \
-        (ancient or modern) reads to only keep the ancient DNA. If an ancient reference is given, recognised DNA will \
-        be kept, otherwise it will be removed.',
+        description='This program uses a reference (either a bloom filter or a kmer text file) to recognise targeted DNA \
+        (ancient or modern) reads to separate ancient DNA from modern DNA. aDNA will be stored in a "decontaminated" file \
+        and the modern DNA in the "contamination" for each sample.',
         usage='%(prog)s [options]',
         epilog="EX: python3 akmerbroom.py -i $(find ./tests/*.fastq) -o ./output -t 2 --kmers_set kmers.txt")
     parser.add_argument('--bloom', help='Used if a BloomFilter is provided (defaults to False)',
