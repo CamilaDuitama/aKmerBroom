@@ -1,9 +1,9 @@
 # 🧹🦷rKmerBroom: Modified version of aKmerBroom, see original repo (temporary name to avoid shadowing)
 ## Read paper [here](https://www.cell.com/iscience/pdf/S2589-0042(23)02134-X.pdf)
 
-`rKmerBroom` is a tool to decontaminate ancient DNA samples. It differes from aKmerBroom in the following aspects:
+`aKmerBroom` is a tool to decontaminate ancient DNA samples. This version differs from the original in the following aspects:
 1. The input is a list of files (space separated). THere is no enforcing of a folder input name.
-2. Output folder is created if needed, otherwise there is just a warning it already exists.
+2. Output folder is created if needed, otherwise there is just a warning it already exists and asks user what to do, log the decision.
 3. Each input file is split into two output files, both using the same name prefix. One is the decontaminated sequences, the other contains the contaminating sequences.
 4. Each input file is processed in parallel.
 5. Once the anchor kmers of each input file are computed, all the sets are combined into a union of the sets.
@@ -17,24 +17,46 @@
 + [Testing](#Testing)
 
 ## Usage
-    # Use the ancient kmers bloom filter provided
-    python akmerbroom.py --ancient_bloom
+```bash
+usage: akmerbroom.py [options]
 
-    or    
+This program uses a reference (either a bloom filter or a kmer text file) to recognise targeted DNA (ancient or modern) reads to separate ancient DNA from modern DNA. aDNA will be stored in a "decontaminated" file and the modern DNA in the "contamination" for each sample.
 
-    # Use an ancient kmers text file 
-    python akmerbroom.py --ancient_kmers_set
+options:
+  -h, --help            show this help message and exit
+  --bloom BLOOM         Used if a BloomFilter is provided (defaults to False)
+  --bloom_capacity BLOOM_CAPACITY
+                        If a BloomFilter is not provided, this sets the capacity of the bloom filter. This should be greater than the number of distinct kmers in the input file. Default to 2 billion.
+  --kmers_set KMERS_SET
+                        Used if a kmers set is provided (defaults to False).
+  -k KMER_SIZE, --kmer_size KMER_SIZE
+                        Set kmer size (defaults to 31)
+  --n_consec_matches N_CONSEC_MATCHES
+                        Set number of consec matches to classify read as anchor read, (defaults to 2).
+  --anchor_proportion_cutoff ANCHOR_PROPORTION_CUTOFF
+                        Set anchor kmer proportion, above which a read is classified as modern/ancient (defaults to 0.5)
+  -i INPUT [INPUT ...], --input INPUT [INPUT ...]
+                        Path to input file(s), space-separated.
+  -o OUTPUT, --output OUTPUT
+                        Path to output folder, where you want aKmerBroom to write the results.
+  -t THREADS, --threads THREADS
+                        WARNING: right now, not used. Sorry, async is a pain. Number of threads to use, default to 1.
+  -s SINGLE, --single SINGLE
+                        Decontaminates samples independently instead of pooling k-mers from multi-samples for decontamination.
+  -m MODERN, --modern MODERN
+                        Flag to indicate that reference is modern DNA (defaults to False).
 
-
+EX: python3 akmerbroom.py -i $(find ./tests/*.fastq) -o ./output -t 2 --kmers_set kmers.txt
+```
 
 ## Input
 
-Other than fastq files (that you can provide using `find` command), either provide a kmer set from present DNA or a bloom filter built with kmers from present DNA.
+Other than fastq files (that you can provide using `find` command), either provide a kmer set from modern DNA or a bloom filter built with kmers from modern DNA.
 
 ## Output 
 
 The output folder contains, for each file `{input}.fastq`, files `{input}_contamination.fastq` and `{input}_decontaminated.fastq.`.
-The former contains sequences rejected (not ancient), the later the sequences accepected as ancient.
+The former contains sequences rejected (not ancient), the later the sequences accepted as ancient.
 
 ## Dependencies
 ```
@@ -50,9 +72,15 @@ mamba create -n broom akmerbroom.yml
 ```
 
 ## Testing
-The `tests/` folder contains a test dataset consisting of 3 fastq files a kmer set. Each fastq file contains only 2 sequences.
+The `tests/` folder contains a test dataset consisting of 3 fastq files a kmer set. Each fastq file contains only 1 or 2 sequences.
 To run a test, use the following steps:
 
 ```bash
-python3 ../rKmerBroom/akmerbroom.py --input $(find tests/*.fastq) --output output/ --present_kmers_set tests/kmer_set.txt
+python3 ../rKmerBroom/akmerbroom.py --input $(find tests/*.fastq) --output ./output/ --kmers_set tests/kmer_set.txt 
 ```
+To verify the behavior of the `--modern` option:
+```bash
+python3 ../rKmerBroom/akmerbroom.py --input $(find tests/*.fastq) --output ./output_modern/ --kmers_set tests/kmer_set.txt --modern 1
+```
+Compare the output files for the third fastq. Contamination and decontamined should be reversed.
+
