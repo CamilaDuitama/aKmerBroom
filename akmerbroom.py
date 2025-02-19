@@ -19,7 +19,7 @@ def main():
     """
     parser = argparse.ArgumentParser(
         description='This program finds uses a reference (either a bloom filter or kmers) to recognise targeted DNA \
-        (ancient or present) reads to only keep the ancient DNA. If an ancient reference is given, recognised DNA will \
+        (ancient or modern) reads to only keep the ancient DNA. If an ancient reference is given, recognised DNA will \
         be kept, otherwise it will be removed.',
         usage='%(prog)s [options]',
         epilog="EX: python3 akmerbroom.py -i $(find ./tests/*.fastq) -o ./output -t 2 --kmers_set kmers.txt")
@@ -35,7 +35,7 @@ def main():
     parser.add_argument('--n_consec_matches', type=int, help="Set number of consec matches to classify \
                         read as anchor read, (defaults to 2).", default=2, required=False)
     parser.add_argument('--anchor_proportion_cutoff', help="Set anchor kmer proportion, \
-                        above which a read is classified as present (defaults to 0.5)", default=0.5, type=float,
+                        above which a read is classified as modern/ancient (defaults to 0.5)", default=0.5, type=float,
                         required=False)
     parser.add_argument('-i', '--input', help="Path to input file(s), space-separated.", required=True, nargs='+')
     parser.add_argument("-o", "--output",
@@ -45,8 +45,8 @@ def main():
                         default=1, type=int)
     parser.add_argument("-s", "--single", type=bool, help="Decontaminates samples independently \
                         instead of pooling k-mers from multi-samples for decontamination.")
-    parser.add_argument("-p", "--present", type=bool, default=False, help="Flag to indicate that reference \
-                        is present DNA (defaults to False).")
+    parser.add_argument("-m", "--modern", type=bool, default=False, help="Flag to indicate that reference \
+                        is modern DNA (defaults to False).")
 
     args = vars(parser.parse_args())
 
@@ -86,7 +86,7 @@ def main():
         logger.error("The number of threads is not valid.")
         kmers.exit_gracefully()
 
-    # checks existence of present kmers in any form
+    # checks existence of modern kmers in any form
     if not os.path.isfile(args['bloom']) and not os.path.isfile(args['kmers_set']):
         logger.error("Please provide a kmer set or a bloom filter.")
         kmers.exit_gracefully()
@@ -101,7 +101,7 @@ def main():
 
     logger.info("Started...")
     # declare defaults
-    logger.info("Shortlisting present reads")
+    logger.info("Shortlisting modern reads")
     # builds the bloom filter once for all
     print("Getting the Bloom Filter ready ...")
     kmers_bf = classify_reads.getbloomFilter(args["bloom"], bf_capacity, args["kmers_set"],
@@ -112,7 +112,7 @@ def main():
     shared_n_consec_matches = Value('i', args['n_consec_matches'])
     shared_output = Value(c_wchar_p, args["output"])
     shared_anchor_proportion_cutoff = Value('f', args["anchor_proportion_cutoff"])
-    shared_present_DNA_flag = Value('i', args['present'])
+    shared_modern_DNA_flag = Value('i', args['modern'])
 
     # creates a custom manager for a set in shared memory
     class CustomManager(BaseManager):
@@ -164,7 +164,7 @@ def main():
                                                                                      shared_k_size.value,
                                                                                      shared_anchor_proportion_cutoff.value,
                                                                                      shared_output.value,
-                                                                                     shared_present_DNA_flag.value))
+                                                                                     shared_modern_DNA_flag.value))
         pool.close()
         pool.join()
 
