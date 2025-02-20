@@ -1,92 +1,91 @@
-# 🧹🦷aKmerBroom: Ancient oral DNA decontamination using Bloom filters on k-mer sets
+# 🧹🦷rKmerBroom: Modified version of aKmerBroom, see original repo (temporary name to avoid shadowing)
 ## Read paper [here](https://www.cell.com/iscience/pdf/S2589-0042(23)02134-X.pdf)
 
-`aKmerBroom`is a tool to decontaminate ancient oral samples from a FASTA/FASTQ file. It does so in the following steps: 
-1. Build an `ancient_kmers.bloom` filter from an ancient kmers text file (if such a Bloom filter does not yet exist).
-2. For a set of input reads:
-    1. Save those reads which have 2 consecutive kmer matches against `ancient_kmers.bloom`
-    2. Kmerize the saved reads to generate a new set of ancient kmers, called "anchor kmers"
-3. For the same set of input reads, identify matches against anchor kmers and classify each read with >50% matches as an ancient read.
+`aKmerBroom` is a tool to decontaminate ancient DNA samples. This version differs from the original in the following aspects:
+1. The input is a list of files (space separated). THere is no enforcing of a folder input name.
+2. Output folder is created if needed, otherwise there is just a warning it already exists and asks user what to do, log the decision.
+3. Each input file is split into two output files, both using the same name prefix. One is the decontaminated sequences, the other contains the contaminating sequences.
+4. Each input file is processed in parallel.
+5. Once the anchor kmers of each input file are computed, all the sets are combined into a union of the sets.
 
 ![pipeline_svg.png](https://raw.githubusercontent.com/CamilaDuitama/aKmerBroom/main/pipeline_svg.png)**aKmerBroom pipeline:** First, an offline step is performed: a collection of samples representative from diverse sources is used to create a trusted set of oral kmers. The trusted collection indexes kmers that appear exclusively in modern and ancient oral samples, but not other samples from contaminant sources (see panel on the left called Collection of datasets). Then this set of oral kmers is used to decontaminate an input set of reads. The algorithm proceeds by looking up each read kmer inside the Bloom Filter of trusted oral kmers, and marking positions of matches. Reads having at least two consecutive matches to the Bloom Filter get passed to the construction of a set containing all kmers from such reads. Finally, the same input reads are scanned again using the aforementioned set, and reads having a proportion of kmer matches over a certain threshold are reported to be of ancient oral origin.
 
-+ [Usage](#Usage)  
-+ [Input](#Input)  
-+ [Output](#Output)  
-+ [Dependencies](#Dependencies)  
-+ [Testing](#Testing)    
++ [Usage](#Usage)
++ [Input](#Input)
++ [Output](#Output)
++ [Dependencies](#Dependencies)
++ [Testing](#Testing)
 
 ## Usage
-    # Use the ancient kmers bloom filter provided
-    python akmerbroom.py --ancient_bloom
+```bash
+usage: akmerbroom.py [options]
 
-    or    
+This program uses a reference (either a bloom filter or a kmer text file) to recognise targeted DNA (ancient or modern) reads to separate ancient DNA from modern DNA. aDNA will be stored in a "decontaminated" file and the modern DNA in the "contamination" for each sample.
 
-    # Use an ancient kmers text file 
-    python akmerbroom.py --ancient_kmers_set
+options:
+  -h, --help            show this help message and exit
+  --bloom BLOOM         Used if a BloomFilter is provided (defaults to False)
+  --bloom_capacity BLOOM_CAPACITY
+                        If a BloomFilter is not provided, this sets the capacity of the bloom filter. This should be greater than the number of distinct kmers in the input file. Default to 2 billion.
+  --kmers_set KMERS_SET
+                        Used if a kmers set is provided (defaults to False).
+  -k KMER_SIZE, --kmer_size KMER_SIZE
+                        Set kmer size (defaults to 31)
+  --n_consec_matches N_CONSEC_MATCHES
+                        Set number of consec matches to classify read as anchor read, (defaults to 2).
+  --anchor_proportion_cutoff ANCHOR_PROPORTION_CUTOFF
+                        Set anchor kmer proportion, above which a read is classified as modern/ancient (defaults to 0.5)
+  -i INPUT [INPUT ...], --input INPUT [INPUT ...]
+                        Path to input file(s), space-separated.
+  -o OUTPUT, --output OUTPUT
+                        Path to output folder, where you want aKmerBroom to write the results.
+  -t THREADS, --threads THREADS
+                        WARNING: right now, not used. Sorry, async is a pain. Number of threads to use, default to 1.
+  -s, --single          Flag to decontaminate samples independently instead of pooling k-mers from multi-samples for decontamination.
+  -m, --modern          Flag to indicate that reference is modern DNA (defaults to False).
 
-    
+EX: python3 akmerbroom.py -i $(find ./tests/*.fastq) -o ./output -t 2 --kmers_set ./tests/kmers.txt
 
+```
 
 ## Input
 
-The `data/` folder should contain the following input files:
-
-```
-ancient_kmers.bloom : a bloom filter with ancient kmers
-unknown_reads.fastq : a file with reads which we want to classify as ancient or not
-[optional] ancient_kmers : a text file where each row is a known ancient kmer
-[optional] n_consec_matches : Number of consecutive matches in the Bloom Filter that should be used to classify a read as anchor read
-```    
+Other than fastq files (that you can provide using `find` command), either provide a kmer set from modern DNA or a bloom filter built with kmers from modern DNA.
 
 ## Output 
 
-The `output/` folder should contain the following output files:
-```
-annotated_reads.fastq                     # intermediate output
-annotated_reads_with_anchor_kmers.fastq   # final output
-```
-The final output file has the following 4 fields in each record header: 
-```
-SeqId, ReadLen, isConsecutiveMatchFound, AnchorProportion
-```   
-By default, reads with `AnchorProportion` >= 0.5 (ie. 50%) are chosen as ancient reads. 
-
+The output folder contains, for each file `{input}.fastq`, files `{input}_annotated.fastq`, `{input}_contamination.fastq` and `{input}_decontaminated.fastq.`.
+The first contains annotated sequences, the second the rejected sequences (not ancient), the third contains the sequences accepted as ancient.
 
 ## Dependencies
 ```
 pip install biopython
 pip install cython
 pip install pybloomfiltermmap3
+pip install multiprocess
 ```
 
+Or use the provided conda environment:
+```bash
+mamba env create -f akmerbroom.yml
+```
 
 ## Testing
-The `tests/` folder contains a test dataset consisting of aOral data `@SRR13355797` mixed with non aOral data `@ERR671934`. 
+The `tests/` folder contains a test dataset consisting of 3 fastq files a kmer set. Each fastq file contains only 1 or 2 sequences.
 To run a test, use the following steps:
 
-First, link the test dataset in the input `data/` folder: 
+```bash
+python3 ../rKmerBroom/akmerbroom.py --input $(find tests/*.fastq) --output ./output/ --kmers_set tests/kmer_set.txt 
 ```
-cd data/
-ln -sf ../tests/unknown_reads.fastq .
+Sequences 1, 2 and 5 should be recognised as ancient (`decontaminated` files) because they contain enough kmers from the reference, and 3 and 4 as contamination.
+To verify the behavior of the `--modern` option:
+```bash
+python3 ../rKmerBroom/akmerbroom.py --input $(find tests/*.fastq) --output ./output_modern/ --kmers_set tests/kmer_set.txt --modern
 ```
-
-Next, download the Bloom Filter into the `data/` folder from the following link
-[ancient_bloom](https://zenodo.org/record/7587160/files/ancient_kmers.bloom?download=1). 
-Note that it could take a few minutes (file size = 3Gb). 
-This can be done from the command line using the `wget` utility.
+Compare the output files : contamination and decontaminated content should be reversed.
+To verify the behavior of the `--single` option:
+```bash
+python3 ../rKmerBroom/akmerbroom.py --input $(find tests/*.fastq) --output ./output_modern/ --kmers_set tests/kmer_set.txt --single
 ```
-cd data/             # if you are not already in the data/ directory 
-wget https://zenodo.org/record/7587160/files/ancient_kmers.bloom -O ancient_kmers.bloom
-```
-**NOTE:** This Bloom Filter was pre-constructed to reduce the running time and facilitate things for users, and *it should be used to decontaminate ancient oral samples only*. The way it was constructed was detailed on the manuscript for aKmerBroom, but it basically consists of clean k-mers that are of oral origin.
-
-Finally, run aKmerBroom
-```
-cd ../              # if you are not already in the main directory
-python akmerbroom.py --ancient_bloom
-```
-
-The ancient reads file will be written to `output/annotated_reads_with_anchor_kmers.fastq`. 
-
-
+This time, the sequence number 5 (`seq5`) should not be recognised. This is because the reference is augmented separately for each sample, thus the kmers containing G, added to the reference pool because of `seq2`, will not be present in the reference at the time this sample is decontaminated.
+Whether the sequence is in `contamination` or `decontaminated` depends on the use of the flag `--modern`. 
