@@ -79,7 +79,12 @@ python3 ../rKmerBroom/akmerbroom.py --input $(find tests/*.fastq) --output ./out
 ```
 To verify the behavior of the `--modern` option:
 ```bash
-python3 ../rKmerBroom/akmerbroom.py --input $(find tests/*.fastq) --output ./output_modern/ --kmers_set tests/kmer_set.txt --modern 1
+python3 ../rKmerBroom/akmerbroom.py --input $(find tests/*.fastq) --output ./output_modern/ --kmers_set tests/kmer_set.txt --modern
 ```
-Compare the output files for the third fastq. Contamination and decontamined should be reversed.
-
+Compare the output files : contamination and decontaminated content should be reversed.
+To verify the behavior of the `--single` option:
+```bash
+python3 ../rKmerBroom/akmerbroom.py --input $(find tests/*.fastq) --output ./output_modern/ --kmers_set tests/kmer_set.txt --single
+```
+This time, the sequence number 5 (`seq5`) should not be recognised. This is because the reference is augmented separately for each sample, thus the kmers containing G, added to the reference pool because of `seq2`, will not be present in the reference at the time this sample is decontaminated.
+Whether the sequence is in `contamination` or `decontaminated` depends on the use of the flag `--modern`. 
