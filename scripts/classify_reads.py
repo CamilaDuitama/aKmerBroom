@@ -48,7 +48,7 @@ def getbloomFilter(bf, bf_capacity, kmers_file: Union[str, bytes, os.PathLike], 
     return kmers_bf
 
 
-def classify_reads(fastq_file: Union[str, bytes, os.PathLike], bloom_filter, kmer_size: int, n_consecutive_matches: int, output: Union[str, bytes, os.PathLike], shared_anchor_kmer_set, ):
+def classify_reads(fastq_file: Union[str, bytes, os.PathLike], bloom_filter, kmer_size: int, n_consecutive_matches: int, output: Union[str, bytes, os.PathLike], shared_anchor_kmer_set):
     """
     First pass. Uses the bloom filter/kmer set to detect anchors (>=2 consecutive reference kmers in a read), and enrich
     an anchor set with reference kmers + other kmers from a read with >1 anchor.
@@ -126,7 +126,7 @@ def classify_reads_using_anchor_kmers(input_file: Union[str, bytes, os.PathLike]
     op_read_file_decontam = open(output +"/" + input_file.split("/")[-1].rstrip("annotated_reads.fastq") + "_decontaminated.fastq", "w")
     op_read_file_contam = open(output + "/" + input_file.split("/")[-1].rstrip("annotated_reads.fastq") + "_contamination.fastq", "w")
     print(f"Classifying reads for input file {ip_reads_file}, final round.", flush=True)
-    anchor_kmer_set = anchor_kmer_set.copy() #TODO: voir si ca impact les perfs a mort ou si c'est le bon choix
+    anchor_kmer_set = anchor_kmer_set.copy()
     read_count = 0
     for record in SeqIO.parse(ip_reads_file, "fastq"):
         score = record.letter_annotations["phred_quality"]

@@ -43,9 +43,9 @@ def main():
     parser.add_argument("-t", "--threads",
                         help="WARNING: right now, not used. Sorry, async is a pain. Number of threads to use, default to 1.",
                         default=1, type=int)
-    parser.add_argument("-s", "--single", type=bool, help="Decontaminates samples independently \
+    parser.add_argument("-s", "--single", action="store_true", help="Decontaminates samples independently \
                         instead of pooling k-mers from multi-samples for decontamination.")
-    parser.add_argument("-m", "--modern", type=bool, default=False, help="Flag to indicate that reference \
+    parser.add_argument("-m", "--modern", action = "store_true", help="Flag to indicate that reference \
                         is modern DNA (defaults to False).")
 
     args = vars(parser.parse_args())
@@ -124,58 +124,74 @@ def main():
     manager.start()
     shared_kmer_set = manager.shared_set()
 
-    #TODO: trouver quelle partie de ce code etait reliee au bug multithread et mettre l'issue ou la retrouver dans les commit
-
-    # with Pool(processes=args["threads"]) as pool:
-    #     print(f"starting async")
-    #     for i in args["input"]:
-    #         print(i)
-    #         test = pool.apply_async(classify_reads.classify_reads, args=(i, kmers_bf,
-    #                                                               shared_k_size.value,
-    #                                                               shared_n_consec_matches.value,
-    #                                                               shared_output.value,
-    #                                                               shared_kmer_set,))
-    #     pool.close()
-    #     pool.join()
-
-    # with Pool(processes=args["threads"]) as pool:
-    #     for i in args["input"]:
-    #         pool.apply_async(classify_reads.classify_reads, args=(i, kmers_bf, shared_k_size.value, shared_n_consec_matches.value, shared_output.value, shared_kmer_set))
-    #     pool.close()
-    #     pool.join()
-
     #TODO; modifier ce bout de code pour permettre de faire en single-sample
     #TODO: soit je fais un if ici pour passer en multi-threading soit je le mets dans la fonction : la modification necessaire serait de copier le bloom et de pas le partager a la fin, mais embarquer sur la suite avec la copie augmentee sans s'arreter pour join
-    processes = [Process(target=classify_reads.classify_reads, args=(
-        i, kmers_bf, shared_k_size.value, shared_n_consec_matches.value, shared_output.value, shared_kmer_set))
-                 for
-                 i in args["input"]]
-    for i in range(0, len(processes), args["threads"]):
-        for process in processes[i:i + args["threads"]]:
-            process.start()
-    for process in processes:
-        process.join()
-    for process in processes:
-        process.terminate()
 
-    with Pool(processes=args["threads"]) as pool:
+    if args["single"]:
+        # processes = [Process(target=classify_reads.classify_reads, args=(
+        #     i, kmers_bf, shared_k_size.value, shared_n_consec_matches.value, shared_output.value, shared_kmer_set))
+        #              for i in args["input"]]
+        # for process in processes:
+        #     process.start()
+        # for process in processes:
+        #     process.join()
+        # for process in processes:
+        #     process.terminate()
+        #
+        # with Pool(processes=args["threads"]) as pool:
+        #     for i in args["input"]:
+        #         pool.apply_async(classify_reads.classify_reads_using_anchor_kmers, args=(i, shared_kmer_set,
+        #                                                                                  shared_k_size.value,
+        #                                                                                  shared_anchor_proportion_cutoff.value,
+        #                                                                                  shared_output.value,
+        #                                                                                  shared_modern_DNA_flag.value))
+        #     pool.close()
+        #     pool.join()
         for i in args["input"]:
-            pool.apply_async(classify_reads.classify_reads_using_anchor_kmers, args=(i, shared_kmer_set,
-                                                                                     shared_k_size.value,
-                                                                                     shared_anchor_proportion_cutoff.value,
-                                                                                     shared_output.value,
-                                                                                     shared_modern_DNA_flag.value))
-        pool.close()
-        pool.join()
+            anchor_kmers_set_single = set()
+            classify_reads.classify_reads(i, kmers_bf, shared_k_size.value, shared_n_consec_matches.value, shared_output.value, anchor_kmers_set_single)
+            classify_reads.classify_reads_using_anchor_kmers(i,anchor_kmers_set_single, shared_k_size.value,
+                                                                                shared_anchor_proportion_cutoff.value,
+                                                                                shared_output.value,
+                                                                                shared_modern_DNA_flag.value)
 
-    # processes = [Process(target=classify_reads.classify_reads_using_anchor_kmers, args=(i, shared_kmer_set, shared_k_size.value, shared_anchor_proportion_cutoff.value, shared_output.value)) for i in args["input"]]
-    # for i in range(0, len(processes), args["threads"]):
-    #     for process in processes[i:i + args["threads"]]:
-    #         process.start()
-    # for process in processes:
-    #     process.join()
-    # for process in processes:
-    #     process.terminate()
+    else :
+        processes = [Process(target=classify_reads.classify_reads, args=(
+            i, kmers_bf, shared_k_size.value, shared_n_consec_matches.value, shared_output.value, shared_kmer_set))
+                     for i in args["input"]]
+        for process in processes:
+            process.start()
+        for process in processes:
+            process.join()
+        for process in processes:
+            process.terminate()
+
+        with Pool(processes=args["threads"]) as pool:
+            for i in args["input"]:
+                pool.apply_async(classify_reads.classify_reads_using_anchor_kmers, args=(i, shared_kmer_set,
+                                                                                         shared_k_size.value,
+                                                                                         shared_anchor_proportion_cutoff.value,
+                                                                                         shared_output.value,
+                                                                                         shared_modern_DNA_flag.value))
+            pool.close()
+            pool.join()
+
+
+
+
+
+
+    # does not work and crashes everything ????????
+    # with Pool(processes=args["threads"]) as pool:
+    #     for i in args["input"]:
+    #         pool.apply_async(classify_reads.classify_reads, args=(i, kmers_bf, shared_k_size.value,
+    #                                                               shared_n_consec_matches.value,
+    #                                                               shared_output.value,
+    #                                                               shared_kmer_set))
+    #     pool.close()
+    #     pool.join()
+
+
 
     logger.info("Completed successfully")
     print("Done !")
