@@ -22,7 +22,7 @@ def main():
         (ancient or modern) reads to separate ancient DNA from modern DNA. aDNA will be stored in a "decontaminated" file \
         and the modern DNA in the "contamination" for each sample.',
         usage='%(prog)s [options]',
-        epilog="EX: python3 akmerbroom.py -i $(find ./tests/*.fastq) -o ./output -t 2 --kmers_set kmers.txt")
+        epilog="EX: python3 akmerbroom.py -i $(find ./tests/*.fastq) -o ./output -t 2 --kmers_set ./tests/kmers.txt")
     parser.add_argument('--bloom', help='Used if a BloomFilter is provided (defaults to False)',
                         type=str, action='store', required=False, default="")
     parser.add_argument("--bloom_capacity", type=int, help="If a BloomFilter is not provided, \

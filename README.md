@@ -44,7 +44,7 @@ options:
   -s, --single          Flag to decontaminate samples independently instead of pooling k-mers from multi-samples for decontamination.
   -m, --modern          Flag to indicate that reference is modern DNA (defaults to False).
 
-EX: python3 akmerbroom.py -i $(find ./tests/*.fastq) -o ./output -t 2 --kmers_set kmers.txt
+EX: python3 akmerbroom.py -i $(find ./tests/*.fastq) -o ./output -t 2 --kmers_set ./tests/kmers.txt
 
 ```
 
