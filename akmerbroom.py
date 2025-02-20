@@ -9,10 +9,6 @@ from multiprocessing.managers import BaseManager
 from ctypes import c_wchar_p
 
 
-#TODO: make the single or multi-sample decontamination an option (through a (non-)shared object of anchor_kmers)
-#TODO: arg pour dire si la ref est ancienne ou presente et en consequence retirer ce qui est reconnu ou le garder: DONE
-#TODO: verifier que le multi-threading est tjrs pas possible sur la seconde passe
-
 def main():
     """
     Main function.
@@ -101,7 +97,6 @@ def main():
 
     logger.info("Started...")
     # declare defaults
-    logger.info("Shortlisting modern reads")
     # builds the bloom filter once for all
     print("Getting the Bloom Filter ready ...")
     kmers_bf = classify_reads.getbloomFilter(args["bloom"], bf_capacity, args["kmers_set"],
@@ -124,29 +119,8 @@ def main():
     manager.start()
     shared_kmer_set = manager.shared_set()
 
-    #TODO; modifier ce bout de code pour permettre de faire en single-sample
-    #TODO: soit je fais un if ici pour passer en multi-threading soit je le mets dans la fonction : la modification necessaire serait de copier le bloom et de pas le partager a la fin, mais embarquer sur la suite avec la copie augmentee sans s'arreter pour join
 
     if args["single"]:
-        # processes = [Process(target=classify_reads.classify_reads, args=(
-        #     i, kmers_bf, shared_k_size.value, shared_n_consec_matches.value, shared_output.value, shared_kmer_set))
-        #              for i in args["input"]]
-        # for process in processes:
-        #     process.start()
-        # for process in processes:
-        #     process.join()
-        # for process in processes:
-        #     process.terminate()
-        #
-        # with Pool(processes=args["threads"]) as pool:
-        #     for i in args["input"]:
-        #         pool.apply_async(classify_reads.classify_reads_using_anchor_kmers, args=(i, shared_kmer_set,
-        #                                                                                  shared_k_size.value,
-        #                                                                                  shared_anchor_proportion_cutoff.value,
-        #                                                                                  shared_output.value,
-        #                                                                                  shared_modern_DNA_flag.value))
-        #     pool.close()
-        #     pool.join()
         for i in args["input"]:
             anchor_kmers_set_single = set()
             classify_reads.classify_reads(i, kmers_bf, shared_k_size.value, shared_n_consec_matches.value, shared_output.value, anchor_kmers_set_single)
