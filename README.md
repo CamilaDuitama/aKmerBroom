@@ -77,6 +77,7 @@ To run a test, use the following steps:
 ```bash
 python3 ../rKmerBroom/akmerbroom.py --input $(find tests/*.fastq) --output ./output/ --kmers_set tests/kmer_set.txt 
 ```
+Sequences 1, 2 and 5 should be recognised as ancient (`decontaminated` files) because they contain enough kmers from the reference, and 3 and 4 as contamination.
 To verify the behavior of the `--modern` option:
 ```bash
 python3 ../rKmerBroom/akmerbroom.py --input $(find tests/*.fastq) --output ./output_modern/ --kmers_set tests/kmer_set.txt --modern
