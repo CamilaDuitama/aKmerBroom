@@ -41,12 +41,11 @@ options:
                         Path to output folder, where you want aKmerBroom to write the results.
   -t THREADS, --threads THREADS
                         WARNING: right now, not used. Sorry, async is a pain. Number of threads to use, default to 1.
-  -s SINGLE, --single SINGLE
-                        Decontaminates samples independently instead of pooling k-mers from multi-samples for decontamination.
-  -m MODERN, --modern MODERN
-                        Flag to indicate that reference is modern DNA (defaults to False).
+  -s, --single          Flag to decontaminate samples independently instead of pooling k-mers from multi-samples for decontamination.
+  -m, --modern          Flag to indicate that reference is modern DNA (defaults to False).
 
 EX: python3 akmerbroom.py -i $(find ./tests/*.fastq) -o ./output -t 2 --kmers_set kmers.txt
+
 ```
 
 ## Input
@@ -55,8 +54,8 @@ Other than fastq files (that you can provide using `find` command), either provi
 
 ## Output 
 
-The output folder contains, for each file `{input}.fastq`, files `{input}_contamination.fastq` and `{input}_decontaminated.fastq.`.
-The former contains sequences rejected (not ancient), the later the sequences accepted as ancient.
+The output folder contains, for each file `{input}.fastq`, files `{input}_annotated.fastq`, `{input}_contamination.fastq` and `{input}_decontaminated.fastq.`.
+The first contains annotated sequences, the second the rejected sequences (not ancient), the third contains the sequences accepted as ancient.
 
 ## Dependencies
 ```

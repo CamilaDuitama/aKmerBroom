@@ -43,7 +43,7 @@ def main():
     parser.add_argument("-t", "--threads",
                         help="WARNING: right now, not used. Sorry, async is a pain. Number of threads to use, default to 1.",
                         default=1, type=int)
-    parser.add_argument("-s", "--single", action="store_true", help="Decontaminates samples independently \
+    parser.add_argument("-s", "--single", action="store_true", help="Flag to decontaminate samples independently \
                         instead of pooling k-mers from multi-samples for decontamination.")
     parser.add_argument("-m", "--modern", action = "store_true", help="Flag to indicate that reference \
                         is modern DNA (defaults to False).")
