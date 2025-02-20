@@ -67,7 +67,7 @@ pip install multiprocess
 
 Or use the provided conda environment:
 ```bash
-mamba create -n broom akmerbroom.yml
+mamba env create -f akmerbroom.yml
 ```
 
 ## Testing
