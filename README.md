@@ -83,13 +83,6 @@ for file in *.fastq; do
 done
 ```
 
-### Alternative: Using Python directly (if not installed as package)
-
-```bash
-# If you haven't installed with pip install -e .
-python akmerbroom.py --ancient_bloom --input_file sample.fastq --output_prefix sample1
-```
-
 ## Command Line Arguments
 
 | Argument | Description | Default | Required |
@@ -178,9 +171,6 @@ pip install -e .
 ```bash
 # Test with the new command-line tool
 aKmerBroom --ancient_bloom --input_file tests/unknown_reads.fastq --output_prefix test_run
-
-# Alternative: using Python directly
-python akmerbroom.py --ancient_bloom --input_file tests/unknown_reads.fastq --output_prefix test_run
 ```
 
 **Step 3: Check results**
