@@ -1,0 +1,38 @@
+package:
+  name: akmerbroom
+  version: "1.0.0"
+
+source:
+  path: ..
+
+build:
+  noarch: python
+  number: 0
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+  entry_points:
+    - aKmerBroom = akmerbroom.main:main
+
+requirements:
+  build:
+    - python >=3.7
+    - setuptools
+  run:
+    - python >=3.7
+    - biopython
+    - pybloomfiltermmap3
+
+test:
+  imports:
+    - akmerbroom
+  commands:
+    - aKmerBroom --help
+
+about:
+  home: https://github.com/CamilaDuitama/aKmerBroom
+  license: MIT
+  license_file: LICENSE
+  summary: Ancient oral DNA decontamination using Bloom filters on k-mer sets
+
+extra:
+  recipe-maintainers:
+    - CamilaDuitama
