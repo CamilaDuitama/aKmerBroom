@@ -1,0 +1,13 @@
+name: aKmerBroom
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=3.9
+  - pip
+  - biopython
+  - cython
+  - pytest
+  - pip:
+    - pybloomfiltermmap3

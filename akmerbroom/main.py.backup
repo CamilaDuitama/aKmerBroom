@@ -3,7 +3,7 @@ import argparse
 import os
 import logging
 import time
-from scripts import classify_reads, kmers
+from .scripts import classify_reads, kmers
 
 
 def main():
@@ -18,14 +18,14 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
   # Basic usage with Bloom filter
-  python akmerbroom.py --ancient_bloom --input_file sample.fastq --output_prefix sample1
+  aKmerBroom --ancient_bloom --input_file sample.fastq --output_prefix sample1
   
   # Using k-mers text file instead of Bloom filter
-  python akmerbroom.py --ancient_kmers_set --input_file sample.fastq --output_prefix sample1
+  aKmerBroom --ancient_kmers_set --input_file sample.fastq --output_prefix sample1
   
   # Custom parameters
-  python akmerbroom.py --ancient_bloom --input_file sample.fastq --output_prefix sample1 \
-                       --kmer_size 25 --anchor_proportion_cutoff 0.6
+  aKmerBroom --ancient_bloom --input_file sample.fastq --output_prefix sample1 \\
+             --kmer_size 25 --anchor_proportion_cutoff 0.6
 
 For more information, visit: https://github.com/CamilaDuitama/aKmerBroom""")
     

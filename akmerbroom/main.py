@@ -3,7 +3,7 @@ import argparse
 import os
 import logging
 import time
-from scripts import classify_reads, kmers
+from .scripts import classify_reads, kmers
 
 
 def main():
@@ -18,14 +18,14 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""Examples:
   # Basic usage with Bloom filter
-  python akmerbroom.py --ancient_bloom --input_file sample.fastq --output_prefix sample1
+  aKmerBroom --ancient_bloom --input_file sample.fastq --output_prefix sample1
   
   # Using k-mers text file instead of Bloom filter
-  python akmerbroom.py --ancient_kmers_set --input_file sample.fastq --output_prefix sample1
+  aKmerBroom --ancient_kmers_set --input_file sample.fastq --output_prefix sample1
   
   # Custom parameters
-  python akmerbroom.py --ancient_bloom --input_file sample.fastq --output_prefix sample1 \
-                       --kmer_size 25 --anchor_proportion_cutoff 0.6
+  aKmerBroom --ancient_bloom --input_file sample.fastq --output_prefix sample1 \\
+             --kmer_size 25 --anchor_proportion_cutoff 0.6
 
 For more information, visit: https://github.com/CamilaDuitama/aKmerBroom""")
     
@@ -252,32 +252,6 @@ For more information, visit: https://github.com/CamilaDuitama/aKmerBroom""")
         logger.error(f"Cannot read input file {input_file}: {str(e)}")
         kmers.exit_gracefully()
     
-    #check output folder does not exist else create folder
-    if os.path.isdir(args["output"]):
-        logger.error("Output directory already exists")
-        kmers.exit_gracefully()
-    else:
-        output=args["output"]
-        try:
-            os.mkdir(output)
-        except OSError as e:
-            logger.error(f"Cannot create output directory {output}: {str(e)}")
-            kmers.exit_gracefully()
-
-    # set kmer_size from argument or using default here
-    if not args['kmer_size']:
-        k_size = 31
-    else:
-        try:
-            k_size = int(args['kmer_size'])
-            if k_size <= 0:
-                logger.error(f"k-mer size must be positive, got: {k_size}")
-                kmers.exit_gracefully()
-            if k_size > 100:
-                logger.warning(f"Very large k-mer size: {k_size}. This may cause performance issues.")
-        except ValueError:
-            logger.error("Error : kmer_size provided is not an integer")
-            kmers.exit_gracefully()
 
     # set bloom filter
     if args['ancient_bloom']:
